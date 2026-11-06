@@ -7,10 +7,14 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Bunpo" />
   <meta name="theme-color" content="#0B0F19" />
+  <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3898/3898082.png" />
   <title>Bunpo</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
     tailwind.config = {
       darkMode: 'class',
       theme: {
@@ -24,11 +28,7 @@
               lightCard: '#FFFFFF',
               lightBorder: '#E5E9F2',
               accent: '#5865F2',
-              accentSoft: '#4752C4',
-              teal: '#14B8A6',
-              amber: '#F59E0B',
-              rose: '#F43F5E',
-              emerald: '#10B981'
+              accentSoft: '#4752C4'
             }
           }
         }
@@ -58,8 +58,8 @@
     }
 
     rt {
-      font-size: 0.58em;
-      font-weight: 500;
+      font-size: 0.56em;
+      font-weight: 600;
       letter-spacing: 0.02em;
       opacity: 0.85;
       transform: translateY(-2px);
@@ -85,7 +85,6 @@
       scrollbar-width: none;
     }
 
-    /* Highlighted particles like Bunpo */
     .pt-tag {
       display: inline-block;
       padding: 1px 6px;
@@ -104,7 +103,7 @@
 
     .word-token {
       display: inline-block;
-      padding: 2px 3px;
+      padding: 2px 4px;
       border-radius: 6px;
       cursor: pointer;
       transition: background 0.15s;
@@ -117,8 +116,8 @@
     canvas.draw-pad {
       touch-action: none;
       background-image: 
-        linear-gradient(to right, rgba(148, 163, 184, 0.14) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(148, 163, 184, 0.14) 1px, transparent 1px);
+        linear-gradient(to right, rgba(148, 163, 184, 0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(148, 163, 184, 0.15) 1px, transparent 1px);
       background-size: 50% 50%;
     }
   </style>
@@ -126,39 +125,54 @@
 <body class="bg-bunpo-lightBg dark:bg-bunpo-darkBg text-slate-900 dark:text-slate-100 h-screen w-screen overflow-hidden flex flex-col transition-colors duration-200">
 
   <!-- TOP HEADER -->
-  <header class="safe-top px-5 pb-3 bg-bunpo-lightCard/90 dark:bg-bunpo-darkCard/90 backdrop-blur-md border-b border-bunpo-lightBorder dark:border-bunpo-darkBorder flex items-center justify-between z-20 shrink-0">
+  <header class="safe-top px-4 pb-3 bg-bunpo-lightCard/95 dark:bg-bunpo-darkCard/95 backdrop-blur-md border-b border-bunpo-lightBorder dark:border-bunpo-darkBorder flex items-center justify-between z-20 shrink-0">
     <div class="flex items-center gap-2.5">
       <div class="w-8 h-8 rounded-xl bg-bunpo-accent flex items-center justify-center text-white font-extrabold text-lg shadow-sm jp-font">
         文
       </div>
       <div>
         <h1 class="font-bold text-base tracking-tight leading-none">Bunpo</h1>
-        <p id="header-subtitle" class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">JLPT N5 • Curso Completo</p>
+        <p id="header-subtitle" class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">38 Capítulos • Kana + N5 Completo</p>
       </div>
     </div>
 
     <div class="flex items-center gap-2">
-      <!-- Furigana quick toggle -->
       <button onclick="toggleFurigana()" id="furi-btn" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold border border-bunpo-lightBorder dark:border-bunpo-darkBorder bg-slate-100 dark:bg-slate-800/80 text-bunpo-accent dark:text-indigo-400 flex items-center gap-1">
         <span class="jp-font text-[11px]">あ</span> Furigana
       </button>
 
-      <!-- Streak Counter -->
       <div class="px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-1 text-amber-500 font-bold text-xs">
         <span>🔥</span>
         <span id="streak-badge">1</span>
       </div>
 
-      <!-- Theme Switch -->
-      <button onclick="toggleTheme()" id="theme-btn" class="w-8 h-8 rounded-xl border border-bunpo-lightBorder dark:border-bunpo-darkBorder bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center text-sm" aria-label="Cambiar tema">
+      <button onclick="toggleTheme()" id="theme-btn" class="w-8 h-8 rounded-xl border border-bunpo-lightBorder dark:border-bunpo-darkBorder bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center text-sm" aria-label="Tema">
         🌙
       </button>
     </div>
   </header>
 
+  <!-- COURSE TRACK SELECTOR (COMO EN LA PARTE SUPERIOR DE BUNPO) -->
+  <div id="track-selector" class="bg-bunpo-lightCard dark:bg-bunpo-darkCard border-b border-bunpo-lightBorder dark:border-bunpo-darkBorder px-4 py-2.5 flex gap-2 overflow-x-auto no-scrollbar shrink-0">
+    <button onclick="selectTrack('all')" id="track-all" class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-bunpo-accent text-white">
+      Todo (38)
+    </button>
+    <button onclick="selectTrack('hiragana')" id="track-hiragana" class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+      1. Hiragana (9)
+    </button>
+    <button onclick="selectTrack('katakana')" id="track-katakana" class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+      2. Katakana (6)
+    </button>
+    <button onclick="selectTrack('basics')" id="track-basics" class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+      3. Palabras Base (3)
+    </button>
+    <button onclick="selectTrack('n5')" id="track-n5" class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+      4. Gramática JLPT N5 (20)
+    </button>
+  </div>
+
   <!-- MAIN SCROLLABLE VIEWPORT -->
   <main id="main-view" class="flex-1 overflow-y-auto no-scrollbar pb-24">
-    <!-- Injected dynamically via JS -->
   </main>
 
   <!-- BOTTOM NAVIGATION BAR -->
@@ -187,25 +201,22 @@
 
   <!-- FULLSCREEN LESSON & QUIZ MODAL -->
   <div id="lesson-modal" class="fixed inset-0 bg-bunpo-lightBg dark:bg-bunpo-darkBg z-40 hidden flex-col justify-between">
-    <!-- Modal Header -->
     <div class="safe-top px-4 pb-3 bg-bunpo-lightCard dark:bg-bunpo-darkCard border-b border-bunpo-lightBorder dark:border-bunpo-darkBorder flex items-center gap-3">
       <button onclick="closeLessonModal()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-300 font-bold">
         ✕
       </button>
       <div class="flex-1 bg-slate-200 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
-        <div id="lesson-progress-bar" class="bg-bunpo-accent h-full transition-all duration-300" style="width: 10%"></div>
+        <div id="lesson-progress-bar" class="bg-bunpo-accent h-full transition-all duration-300" style="width: 8%"></div>
       </div>
+      <span id="lesson-step-counter" class="text-xs font-bold text-slate-400">1/10</span>
       <button onclick="toggleFurigana()" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 jp-font">
         振仮名
       </button>
     </div>
 
-    <!-- Modal Body -->
     <div id="lesson-body" class="flex-1 overflow-y-auto p-5 flex flex-col justify-between max-w-lg mx-auto w-full">
-      <!-- Dynamic card or question -->
     </div>
 
-    <!-- Feedback Drawer & Next Button -->
     <div id="lesson-footer" class="safe-bottom px-5 pt-3 pb-4 bg-bunpo-lightCard dark:bg-bunpo-darkCard border-t border-bunpo-lightBorder dark:border-bunpo-darkBorder max-w-lg mx-auto w-full">
       <div id="feedback-banner" class="hidden mb-3 p-3 rounded-xl text-sm font-medium"></div>
       <button id="lesson-action-btn" onclick="handleLessonAction()" class="w-full py-3.5 rounded-2xl bg-bunpo-accent hover:bg-bunpo-accentSoft text-white font-bold text-base shadow-lg shadow-indigo-500/20 transition active:scale-[0.99]">
@@ -214,734 +225,1472 @@
     </div>
   </div>
 
-  <!-- WORD INSPECTOR POPOVER -->
+  <!-- WORD / KANA POPOVER -->
   <div id="word-popover" onclick="closeWordPopover()" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 hidden items-end justify-center p-4">
-    <div onclick="event.stopPropagation()" class="w-full max-w-md bg-bunpo-lightCard dark:bg-bunpo-darkCard border border-bunpo-lightBorder dark:border-bunpo-darkBorder rounded-3xl p-5 shadow-2xl mb-4">
-      <div class="flex items-start justify-between">
-        <div>
-          <span id="pop-pos" class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-500/15 text-indigo-400">Sustantivo</span>
-          <h3 id="pop-jp" class="jp-font text-3xl font-bold mt-2">日本語</h3>
-          <p id="pop-reading" class="text-sm text-indigo-400 font-medium mt-0.5">にほんご • nihongo</p>
-        </div>
-        <button onclick="speakCurrentPopoverWord()" class="w-12 h-12 rounded-2xl bg-bunpo-accent text-white flex items-center justify-center shadow-md active:scale-95">
-          🔊
-        </button>
-      </div>
-      <p id="pop-meaning" class="mt-3 text-base font-semibold text-slate-700 dark:text-slate-200 border-t border-bunpo-lightBorder dark:border-bunpo-darkBorder pt-3">
-        Idioma japonés
-      </p>
-    </div>
   </div>
 
   <script>
     /**************************************************************
-     * DICCIONARIO DE TOKENS (Para tocar cualquier palabra y ver su desglose)
+     * GENERADOR AUTOMÁTICO DE CAPÍTULOS DE KANA (18 CAPÍTULOS EXHAUSTIVOS)
+     * Cada capítulo incluye:
+     *  - Explicación estilo Bunpo con vocabulario real
+     *  - Pizarra de trazo para CADA carácter del capítulo
+     *  - 4 a 5 ejercicios variados (bloques, rellenar huecos, escritura/audio)
      **************************************************************/
-    const WORD_DICT = {
-      '私': { jp: '私', reading: 'わたし (watashi)', meaning: 'Yo', pos: 'Pronombre' },
-      '僕': { jp: '僕', reading: 'ぼく (boku)', meaning: 'Yo (masculino/casual)', pos: 'Pronombre' },
-      'は': { jp: 'は', reading: 'wa', meaning: 'Partícula de tema (indica de quién o qué se habla)', pos: 'Partícula' },
-      '学生': { jp: '学生', reading: 'がくせい (gakusei)', meaning: 'Estudiante', pos: 'Sustantivo' },
-      'です': { jp: 'です', reading: 'desu', meaning: 'Ser / Estar (cortés afirmativo)', pos: 'Cópula' },
-      'じゃありません': { jp: 'じゃありません', reading: 'ja arimasen', meaning: 'No ser / No estar (cortés negativo)', pos: 'Cópula' },
-      '先生': { jp: '先生', reading: 'せんせい (sensei)', meaning: 'Profesor / Maestro / Doctor', pos: 'Sustantivo' },
-      '日本人': { jp: '日本人', reading: 'にほんじん (nihonjin)', meaning: 'Persona japonesa', pos: 'Sustantivo' },
-      'か': { jp: 'か', reading: 'ka', meaning: 'Partícula interrogativa (convierte la oración en pregunta)', pos: 'Partícula' },
-      'これ': { jp: 'これ', reading: 'kore', meaning: 'Esto (cerca de mí)', pos: 'Demostrativo' },
-      'それ': { jp: 'それ', reading: 'sore', meaning: 'Eso (cerca de ti)', pos: 'Demostrativo' },
-      'あれ': { jp: 'あれ', reading: 'are', meaning: 'Aquello (lejos de ambos)', pos: 'Demostrativo' },
-      'の': { jp: 'の', reading: 'no', meaning: 'Partícula de posesión o conexión ("de")', pos: 'Partícula' },
-      '本': { jp: '本', reading: 'ほん (hon)', meaning: 'Libro', pos: 'Sustantivo' },
-      'カメラ': { jp: 'カメラ', reading: 'kamera', meaning: 'Cámara', pos: 'Sustantivo (Katakana)' },
-      '水': { jp: '水', reading: 'みず (mizu)', meaning: 'Agua', pos: 'Sustantivo' },
-      '寿司': { jp: '寿司', reading: 'すし (sushi)', meaning: 'Sushi', pos: 'Sustantivo' },
-      'ラーメン': { jp: 'ラーメン', reading: 'raamen', meaning: 'Ramen', pos: 'Sustantivo (Katakana)' },
-      'コーヒー': { jp: 'コーヒー', reading: 'koohii', meaning: 'Café', pos: 'Sustantivo (Katakana)' },
-      'を': { jp: 'を', reading: 'o (wo)', meaning: 'Partícula de objeto directo (indica qué recibe la acción)', pos: 'Partícula' },
-      '食べます': { jp: '食べます', reading: 'たべます (tabemasu)', meaning: 'Comer (presente/futuro cortés)', pos: 'Verbo Grupo 2' },
-      '飲みます': { jp: '飲みます', reading: 'のみます (nomimasu)', meaning: 'Beber (presente/futuro cortés)', pos: 'Verbo Grupo 1' },
-      '行きます': { jp: '行きます', reading: 'いきます (ikimasu)', meaning: 'Ir (presente/futuro cortés)', pos: 'Verbo Grupo 1' },
-      '行きました': { jp: '行きました', reading: 'いきました (ikimashita)', meaning: 'Fui / Fue (pasado cortés)', pos: 'Verbo Grupo 1' },
-      '日本': { jp: '日本', reading: 'にほん (nihon)', meaning: 'Japón', pos: 'Sustantivo' },
-      '東京': { jp: '東京', reading: 'とうきょう (toukyou)', meaning: 'Tokio', pos: 'Sustantivo' },
-      '京都': { jp: '京都', reading: 'きょうと (kyouto)', meaning: 'Kioto', pos: 'Sustantivo' },
-      'に': { jp: 'に', reading: 'ni', meaning: 'Partícula de destino, tiempo específico o ubicación de existencia', pos: 'Partícula' },
-      'で': { jp: 'で', reading: 'de', meaning: 'Partícula de medio de transporte o lugar donde ocurre una acción', pos: 'Partícula' },
-      '電車': { jp: '電車', reading: 'でんしゃ (densha)', meaning: 'Tren', pos: 'Sustantivo' },
-      'レストラン': { jp: 'レストラン', reading: 'resutoran', meaning: 'Restaurante', pos: 'Sustantivo (Katakana)' },
-      '美味しい': { jp: '美味しい', reading: 'おいしい (oishii)', meaning: 'Delicioso', pos: 'Adjetivo -i' },
-      '高い': { jp: '高い', reading: 'たかい (takai)', meaning: 'Caro / Alto', pos: 'Adjetivo -i' },
-      '高くないです': { jp: '高くないです', reading: 'たかくないです (takakunai desu)', meaning: 'No es caro / No es alto', pos: 'Adjetivo -i (Negativo)' },
-      '静か': { jp: '静か', reading: 'しずか (shizuka)', meaning: 'Tranquilo / Silencioso', pos: 'Adjetivo -na' },
-      '買いたい': { jp: '買いたい', reading: 'かいたい (kaitai)', meaning: 'Querer comprar (deseo)', pos: 'Verbo forma -tai' },
-      '行きたい': { jp: '行きたい', reading: 'いきたい (ikitai)', meaning: 'Querer ir (deseo)', pos: 'Verbo forma -tai' },
-      'ください': { jp: 'ください', reading: 'kudasai', meaning: 'Por favor (dame / haz)', pos: 'Expresión' },
-      '見て': { jp: '見て', reading: 'みて (mite)', meaning: 'Mirar ( en Forma -TE)', pos: 'Verbo Grupo 2' },
-      '食べないで': { jp: '食べないで', reading: 'たべないで (tabenaide)', meaning: 'No comer (Forma -NAIDE)', pos: 'Verbo Grupo 2' }
-    };
+    function buildKanaLesson({ id, number, title, desc, ruleTitle, ruleBody, chars, words }) {
+      const formula = chars.map(c => `${c.char} (${c.romaji})`).join(' • ');
+      const theory = [
+        {
+          heading: `Capítulo ${number}: ${ruleTitle}`,
+          body: ruleBody,
+          formula: formula,
+          examples: words.map(w => ({
+            jp: w.furiHtml || w.jp,
+            tokens: [],
+            romaji: w.romaji,
+            es: w.es,
+            audio: w.jp
+          }))
+        }
+      ];
+
+      const drawChars = chars.map(c => ({
+        char: c.char,
+        romaji: c.romaji,
+        strokes: c.hint
+      }));
+
+      // Construir preguntas variadas usando las letras y palabras del capítulo
+      const questions = [];
+      const allCharSymbols = chars.map(c => c.char);
+
+      // 1. Armar con bloques la palabra #1
+      if (words[0]) {
+        const w0 = words[0];
+        const poolSet = new Set([...w0.blocks, ...allCharSymbols.slice(0, 3)]);
+        questions.push({
+          type: 'blocks',
+          prompt: `Ordena los bloques para escribir **"${w0.es}"** (${w0.romaji}):`,
+          audioHint: w0.jp,
+          answer: w0.blocks,
+          pool: Array.from(poolSet),
+          explanation: `${w0.blocks.join(' + ')} forma **${w0.jp}** (${w0.romaji} = ${w0.es}).`
+        });
+      }
+
+      // 2. Completar el carácter faltante en la palabra #2
+      if (words[1]) {
+        const w1 = words[1];
+        const targetChar = w1.blocks[w1.blocks.length - 1];
+        const prefix = w1.blocks.slice(0, w1.blocks.length - 1).join('');
+        const distractors = allCharSymbols.filter(c => c !== targetChar).slice(0, 3);
+        while (distractors.length < 3) {
+          const fallback = ['あ', 'い', 'か', 'さ', 'た', 'な', 'ア', 'イ', 'カ'][distractors.length];
+          if (fallback !== targetChar && !distractors.includes(fallback)) distractors.push(fallback);
+          else distractors.push('ん');
+        }
+        const opts = [targetChar, ...distractors].sort(() => Math.random() - 0.5);
+        questions.push({
+          type: 'fill',
+          prompt: `Completa la palabra para **"${w1.es}"** (${w1.romaji}):`,
+          jpSentence: `${prefix} [ ___ ]`,
+          options: opts,
+          correct: targetChar,
+          audio: w1.jp,
+          explanation: `**${w1.jp}** (${w1.romaji}) significa "${w1.es}".`
+        });
+      }
+
+      // 3. Armar con bloques la palabra #3
+      if (words[2]) {
+        const w2 = words[2];
+        const poolSet = new Set([...w2.blocks, ...allCharSymbols.slice(-2)]);
+        questions.push({
+          type: 'blocks',
+          prompt: `Forma con los bloques la palabra **"${w2.es}"** (${w2.romaji}):`,
+          audioHint: w2.jp,
+          answer: w2.blocks,
+          pool: Array.from(poolSet),
+          explanation: `**${w2.jp}** (${w2.romaji}) significa "${w2.es}".`
+        });
+      }
+
+      // 4. Escribir la lectura en Romaji o Kana
+      const targetWord = words[words.length - 1];
+      questions.push({
+        type: 'input',
+        prompt: `Escribe cómo se lee en Romaji (o Kana) la palabra **"${targetWord.es}"**:`,
+        jpDisplay: targetWord.jp,
+        accepted: [targetWord.romaji.toLowerCase(), targetWord.jp],
+        audio: targetWord.jp,
+        explanation: `**${targetWord.jp}** se pronuncia **${targetWord.romaji}** (${targetWord.es}).`
+      });
+
+      return {
+        id,
+        title: `Cap. ${number}: ${title}`,
+        desc,
+        isKanaLesson: true,
+        theory,
+        drawChars,
+        questions
+      };
+    }
 
     /**************************************************************
-     * TABLAS DE REFERENCIA DE HIRAGANA Y KATAKANA
+     * LOS 18 CAPÍTULOS COMPLETOS DE ALFABETO Y PALABRAS BASE (ESTILO BUNPO)
      **************************************************************/
-    const HIRAGANA_CHART = [
-      { char: 'あ', romaji: 'a', hint: 'Manzana atravesada' },
-      { char: 'い', romaji: 'i', hint: 'Dos líneas verticales' },
-      { char: 'う', romaji: 'u', hint: 'Perfil encorvado' },
-      { char: 'え', romaji: 'e', hint: 'Corredor energético' },
-      { char: 'お', romaji: 'o', hint: 'Pelota en hoyo de golf' },
-      { char: 'か', romaji: 'ka', hint: 'Cortar con katana' },
-      { char: 'き', romaji: 'ki', hint: 'Llave (key) antigua' },
-      { char: 'く', romaji: 'ku', hint: 'Pico de pájaro cucú' },
-      { char: 'け', romaji: 'ke', hint: 'Barril de madera' },
-      { char: 'こ', romaji: 'ko', hint: 'Dos peces koi paralelos' },
-      { char: 'さ', romaji: 'sa', hint: 'Cara sonriente' },
-      { char: 'し', romaji: 'shi', hint: 'Anzuelo de pesca' },
-      { char: 'す', romaji: 'su', hint: 'Columpio con bucle' },
-      { char: 'せ', romaji: 'se', hint: 'Dos asientos juntos' },
-      { char: 'そ', romaji: 'so', hint: 'Costura en zigzag' },
-      { char: 'た', romaji: 'ta', hint: 'Parece escribir "ta"' },
-      { char: 'ち', romaji: 'chi', hint: 'Número 5 con sombrero' },
-      { char: 'つ', romaji: 'tsu', hint: 'Gran ola de tsunami' },
-      { char: 'て', romaji: 'te', hint: 'Antena doblada' },
-      { char: 'と', romaji: 'to', hint: 'Espina en el dedo' },
-      { char: 'な', romaji: 'na', hint: 'Nudo complejo' },
-      { char: 'に', romaji: 'ni', hint: 'Rótula de la rodilla' },
-      { char: 'ぬ', romaji: 'nu', hint: 'Fideos (noodles) enrollados' },
-      { char: 'ね', romaji: 'ne', hint: 'Gato (neko) con cola enroscada' },
-      { char: 'の', romaji: 'no', hint: 'Señal de prohibido (NO)' },
-      { char: 'は', romaji: 'ha', hint: 'Letra H + a' },
-      { char: 'ひ', romaji: 'hi', hint: 'Sonrisa que dice "hi-hi"' },
-      { char: 'ふ', romaji: 'fu', hint: 'Silueta del Monte Fuji' },
-      { char: 'へ', romaji: 'he', hint: 'Flecha apuntando al cielo' },
-      { char: 'ほ', romaji: 'ho', hint: 'Chimenea con bandera' },
-      { char: 'ま', romaji: 'ma', hint: 'Mástil con dos velas' },
-      { char: 'み', romaji: 'mi', hint: 'Número 21 musical' },
-      { char: 'む', romaji: 'mu', hint: 'Vaca haciendo muuu' },
-      { char: 'め', romaji: 'me', hint: 'Ojo (me) con pestaña' },
-      { char: 'も', romaji: 'mo', hint: 'Anzuelo con doble carnada' },
-      { char: 'や', romaji: 'ya', hint: 'Cuernos de yak' },
-      { char: 'ゆ', romaji: 'yu', hint: 'Pez tropical único' },
-      { char: 'よ', romaji: 'yo', hint: 'Yo-yo colgando' },
-      { char: 'ら', romaji: 'ra', hint: 'Conejo sentado' },
-      { char: 'り', romaji: 'ri', hint: 'Cañas junto al río' },
-      { char: 'る', romaji: 'ru', hint: 'Ruta con bucle final' },
-      { char: 'れ', romaji: 're', hint: 'Persona haciendo reverencia' },
-      { char: 'ろ', romaji: 'ro', hint: 'Ruta sin bucle (número 3)' },
-      { char: 'わ', romaji: 'wa', hint: 'Avispa volando' },
-      { char: 'を', romaji: 'wo', hint: 'Acróbata saltando' },
-      { char: 'ん', romaji: 'n', hint: 'Cursiva igual a una "n"' }
+    const HIRAGANA_LESSONS = [
+      buildKanaLesson({
+        id: 'kana-cap-1',
+        number: 1,
+        title: 'Vocales Hiragana: あ い う え お',
+        desc: 'Las 5 vocales puras que sirven de base para todos los sonidos del japonés.',
+        ruleTitle: 'Las 5 Vocales Japonesas',
+        ruleBody: 'Todo el sistema fonético japonés gira en torno a 5 vocales puras y cortas: **あ (a), い (i), う (u), え (e), お (o)**. Nunca cambian su sonido sin importar en qué palabra estén.',
+        chars: [
+          { char: 'あ', romaji: 'a', hint: '3 trazos: línea horizontal, vertical curva y lazo amplio.' },
+          { char: 'い', romaji: 'i', hint: '2 trazos verticales paralelos ligeramente curvos.' },
+          { char: 'う', romaji: 'u', hint: '2 trazos: tilde corta superior y arco redondo inferior.' },
+          { char: 'え', romaji: 'e', hint: '2 trazos: punto superior y base en forma de Z fluida.' },
+          { char: 'お', romaji: 'o', hint: '3 trazos: cruz a la izquierda con bucle continuo y tilde a la derecha.' }
+        ],
+        words: [
+          { jp: 'あい', romaji: 'ai', es: 'Amor', blocks: ['あ', 'い'] },
+          { jp: 'うえ', romaji: 'ue', es: 'Arriba / Encima', blocks: ['う', 'え'] },
+          { jp: 'あおい', romaji: 'aoi', es: 'Azul', blocks: ['あ', 'お', 'い'] },
+          { jp: 'いえ', romaji: 'ie', es: 'Casa', blocks: ['い', 'え'] }
+        ]
+      }),
+      buildKanaLesson({
+        id: 'kana-cap-2',
+        number: 2,
+        title: 'Fila K: か き く け こ',
+        desc: 'Combina el sonido K con las 5 vocales para formar tus primeros sustantivos.',
+        ruleTitle: 'Sílabas con K (ka, ki, ku, ke, ko)',
+        ruleBody: 'Al unir la consonante **K** con las cinco vocales obtenemos **か (ka), き (ki), く (ku), け (ke), こ (ko)**. Además, **か** al final de una oración funciona como signo de interrogación.',
+        chars: [
+          { char: 'か', romaji: 'ka', hint: '3 trazos: gancho cuadrado, línea que lo cruza y tilde derecha.' },
+          { char: 'き', romaji: 'ki', hint: '4 trazos: dos líneas horizontales, diagonal y curva inferior.' },
+          { char: 'く', romaji: 'ku', hint: '1 trazo en ángulo abierto como el pico de un ave.' },
+          { char: 'け', romaji: 'ke', hint: '3 trazos: vertical izquierda con gancho y cruz derecha.' },
+          { char: 'こ', romaji: 'ko', hint: '2 trazos horizontales paralelos ligeramente arqueados.' }
+        ],
+        words: [
+          { jp: 'あかい', romaji: 'akai', es: 'Rojo', blocks: ['あ', 'か', 'い'] },
+          { jp: 'えき', romaji: 'eki', es: 'Estación de tren', blocks: ['え', 'き'] },
+          { jp: 'ここ', romaji: 'koko', es: 'Aquí', blocks: ['こ', 'こ'] },
+          { jp: 'こえ', romaji: 'koe', es: 'Voz', blocks: ['こ', 'え'] }
+        ]
+      }),
+      buildKanaLesson({
+        id: 'kana-cap-3',
+        number: 3,
+        title: 'Fila S: さ し す せ そ',
+        desc: 'Domina la fila S y la pronunciación especial de し (shi).',
+        ruleTitle: 'Sílabas con S y la excepción し (shi)',
+        ruleBody: 'En japonés no existe el sonido "si" como en español; en su lugar se pronuncia suave como **し (shi)**. Las demás siguen el patrón regular: **さ (sa), す (su), せ (se), そ (so)**.',
+        chars: [
+          { char: 'さ', romaji: 'sa', hint: '3 trazos: horizontal, diagonal que corta y base curva.' },
+          { char: 'し', romaji: 'shi', hint: '1 trazo vertical que sube en curva como un anzuelo.' },
+          { char: 'す', romaji: 'su', hint: '2 trazos: horizontal y vertical con bucle central.' },
+          { char: 'せ', romaji: 'se', hint: '3 trazos: horizontal larga, vertical derecha y L izquierda.' },
+          { char: 'そ', romaji: 'so', hint: '1 trazo continuo en zigzag arriba y curva tipo C abajo.' }
+        ],
+        words: [
+          { jp: 'すし', romaji: 'sushi', es: 'Sushi', blocks: ['す', 'し'] },
+          { jp: 'かさ', romaji: 'kasa', es: 'Paraguas', blocks: ['か', 'さ'] },
+          { jp: 'そこ', romaji: 'soko', es: 'Ahí (cerca de ti)', blocks: ['そ', 'こ'] },
+          { jp: 'あさ', romaji: 'asa', es: 'Mañana (temprano)', blocks: ['あ', 'さ'] }
+        ]
+      }),
+      buildKanaLesson({
+        id: 'kana-cap-4',
+        number: 4,
+        title: 'Fila T: た ち つ て と',
+        desc: 'Aprende las sílabas con T y los dos sonidos especiales ち (chi) y つ (tsu).',
+        ruleTitle: 'Fila T y sonidos ち (chi) / つ (tsu)',
+        ruleBody: 'La fila T tiene dos excepciones clave: "ti" se convierte en **ち (chi)** y "tu" se convierte en **つ (tsu)**. Las otras tres son regulares: **た (ta), て (te), と (to)**.',
+        chars: [
+          { char: 'た', romaji: 'ta', hint: '4 trazos: cruz a la izquierda y dos líneas horizontales a la derecha.' },
+          { char: 'ち', romaji: 'chi', hint: '2 trazos: horizontal arriba y curva parecida al número 5.' },
+          { char: 'つ', romaji: 'tsu', hint: '1 trazo amplio y curvo como una gran ola.' },
+          { char: 'て', romaji: 'te', hint: '1 trazo horizontal que baja en curva hacia la derecha.' },
+          { char: 'と', romaji: 'to', hint: '2 trazos: diagonal corta superior y curva en C.' }
+        ],
+        words: [
+          { jp: 'ちかてつ', romaji: 'chikatetsu', es: 'Metro / Subterráneo', blocks: ['ち', 'か', 'て', 'つ'] },
+          { jp: 'たこ', romaji: 'tako', es: 'Pulpo', blocks: ['た', 'こ'] },
+          { jp: 'とけい', romaji: 'tokei', es: 'Reloj', blocks: ['と', 'け', 'い'] },
+          { jp: 'くつ', romaji: 'kutsu', es: 'Zapatos', blocks: ['く', 'つ'] }
+        ]
+      }),
+      buildKanaLesson({
+        id: 'kana-cap-5',
+        number: 5,
+        title: 'Fila N: な に ぬ ね の',
+        desc: 'Domina los trazos de bucle de la fila N y la partícula posesiva の.',
+        ruleTitle: 'Sílabas con N (na, ni, nu, ne, no)',
+        ruleBody: 'Todas las sílabas de esta fila son 100% regulares: **な (na), に (ni), ぬ (nu), ね (ne), の (no)**. Presta especial atención a la cola final de **ぬ** (bucle hacia adentro) y **ね** (bucle anudado).',
+        chars: [
+          { char: 'な', romaji: 'na', hint: '4 trazos: cruz superior izquierda, tilde derecha y lazo inferior.' },
+          { char: 'に', romaji: 'ni', hint: '3 trazos: vertical curva izquierda y dos horizontales a la derecha.' },
+          { char: 'ぬ', romaji: 'nu', hint: '2 trazos con doble bucle parecido a fideos enrollados.' },
+          { char: 'ね', romaji: 'ne', hint: '2 trazos: vertical izquierda y línea en Z con bucle enroscado.' },
+          { char: 'の', romaji: 'no', hint: '1 trazo circular continuo como señal de prohibido.' }
+        ],
+        words: [
+          { jp: 'ねこ', romaji: 'neko', es: 'Gato', blocks: ['ね', 'こ'] },
+          { jp: 'いぬ', romaji: 'inu', es: 'Perro', blocks: ['い', 'ぬ'] },
+          { jp: 'なつ', romaji: 'natsu', es: 'Verano', blocks: ['な', 'つ'] },
+          { jp: 'にく', romaji: 'niku', es: 'Carne', blocks: ['に', 'く'] }
+        ]
+      }),
+      buildKanaLesson({
+        id: 'kana-cap-6',
+        number: 6,
+        title: 'Fila H y M: はひふへほ • まみむめも',
+        desc: '10 caracteres esenciales, el sonido suave ふ (fu) y la partícula は.',
+        ruleTitle: 'Filas H y M',
+        ruleBody: 'En la fila H, la H suena como una J muy suave (como en inglés *hello*), excepto **ふ (fu)** que se pronuncia soplando suavemente entre los labios. En la fila M todos los sonidos (**ma, mi, mu, me, mo**) son iguales al español.',
+        chars: [
+          { char: 'は', romaji: 'ha', hint: '3 trazos: vertical izquierda y cruz con bucle a la derecha.' },
+          { char: 'ひ', romaji: 'hi', hint: '1 trazo en forma de sonrisa profunda.' },
+          { char: 'ふ', romaji: 'fu', hint: '4 trazos que dibujan la silueta del Monte Fuji.' },
+          { char: 'へ', romaji: 'he', hint: '1 trazo en pico de montaña.' },
+          { char: 'ほ', romaji: 'ho', hint: '4 trazos: igual a は pero con dos líneas horizontales a la derecha.' },
+          { char: 'ま', romaji: 'ma', hint: '3 trazos: dos horizontales y vertical con bucle final.' },
+          { char: 'み', romaji: 'mi', hint: '2 trazos formando un bucle parecido al número 21.' },
+          { char: 'む', romaji: 'mu', hint: '3 trazos: cruz con bucle redondo, gancho inferior y tilde.' },
+          { char: 'め', romaji: 'me', hint: '2 trazos: como ぬ pero sin el nudito final.' },
+          { char: 'も', romaji: 'mo', hint: '3 trazos: gancho vertical cruzado por dos líneas horizontales.' }
+        ],
+        words: [
+          { jp: 'はな', romaji: 'hana', es: 'Flor', blocks: ['は', 'な'] },
+          { jp: 'ひと', romaji: 'hito', es: 'Persona', blocks: ['ひ', 'と'] },
+          { jp: 'みみ', romaji: 'mimi', es: 'Oreja', blocks: ['み', 'み'] },
+          { jp: 'あめ', romaji: 'ame', es: 'Lluvia / Dulce', blocks: ['あ', 'め'] }
+        ]
+      }),
+      buildKanaLesson({
+        id: 'kana-cap-7',
+        number: 7,
+        title: 'Filas Y, R, W y ん: やゆよ • らりるれろ • わをん',
+        desc: 'Completa los 46 Hiragana básicos y aprende el sonido R japonés y la nasal ん.',
+        ruleTitle: 'Cierre de los 46 Hiragana Base',
+        ruleBody: 'La **R japonesa (ら, り, る, れ, ろ)** siempre suena suave (como la R de *pero*, nunca fuerte como *perro*). **を (wo/o)** se usa únicamente como partícula de objeto directo, y **ん (n)** es la única consonante que va sola al final de una sílaba.',
+        chars: [
+          { char: 'や', romaji: 'ya', hint: '3 trazos: curva amplia, tilde superior y diagonal que cruza.' },
+          { char: 'ゆ', romaji: 'yu', hint: '2 trazos: arco redondo cruzado por una vertical.' },
+          { char: 'よ', romaji: 'yo', hint: '2 trazos: guion corto derecho y vertical con bucle.' },
+          { char: 'ら', romaji: 'ra', hint: '2 trazos: tilde superior y curva inferior tipo 5.' },
+          { char: 'り', romaji: 'ri', hint: '2 trazos verticales paralelos, el derecho más largo.' },
+          { char: 'る', romaji: 'ru', hint: '1 trazo tipo número 3 con bucle cerrado al final.' },
+          { char: 'れ', romaji: 're', hint: '2 trazos: vertical izquierda y zigzag que sube al final.' },
+          { char: 'ろ', romaji: 'ro', hint: '1 trazo igual a る pero sin bucle final.' },
+          { char: 'わ', romaji: 'wa', hint: '2 trazos: vertical izquierda y curva amplia redondeada.' },
+          { char: 'を', romaji: 'wo', hint: '3 trazos: horizontal, gancho central y arco inferior.' },
+          { char: 'ん', romaji: 'n', hint: '1 trazo diagonal que sube como una n cursiva.' }
+        ],
+        words: [
+          { jp: 'やま', romaji: 'yama', es: 'Montaña', blocks: ['や', 'ま'] },
+          { jp: 'さくら', romaji: 'sakura', es: 'Flor de cerezo', blocks: ['さ', 'く', 'ら'] },
+          { jp: 'わたし', romaji: 'watashi', es: 'Yo', blocks: ['わ', 'た', 'し'] },
+          { jp: 'ほん', romaji: 'hon', es: 'Libro', blocks: ['ほ', 'ん'] }
+        ]
+      }),
+      buildKanaLesson({
+        id: 'kana-cap-8',
+        number: 8,
+        title: 'Hiragana Dakuten (゛) y Handakuten (゜)',
+        desc: 'Transforma K→G, S→Z/J, T→D, H→B y H→P usando comillas y círculos.',
+        ruleTitle: 'Sonidos Sonoros: ゛ (Dakuten) y ゜ (Handakuten)',
+        ruleBody: 'Sin aprender letras nuevas, al añadir dos comillas **゛** arriba a la derecha cambias la consonante: **K → G** (か→が), **S → Z** (さ→ざ, し→じ *ji*), **T → D** (た→だ), **H → B** (は→ば). Con el circulito **゜**, **H → P** (は→ぱ).',
+        chars: [
+          { char: 'が', romaji: 'ga', hint: 'か + dos comillas (dakuten) arriba a la derecha.' },
+          { char: 'ぎ', romaji: 'gi', hint: 'き + dakuten.' },
+          { char: 'じ', romaji: 'ji', hint: 'し + dakuten (se pronuncia "ji" suave).' },
+          { char: 'だ', romaji: 'da', hint: 'た + dakuten.' },
+          { char: 'ば', romaji: 'ba', hint: 'は + dakuten.' },
+          { char: 'ぱ', romaji: 'pa', hint: 'は + circulito (handakuten).' }
+        ],
+        words: [
+          { jp: 'みず', romaji: 'mizu', es: 'Agua', blocks: ['み', 'ず'] },
+          { jp: 'かばん', romaji: 'kaban', es: 'Bolso / Mochila', blocks: ['か', 'ば', 'ん'] },
+          { jp: 'まど', romaji: 'mado', es: 'Ventana', blocks: ['ま', 'ど'] },
+          { jp: 'しんぶん', romaji: 'shinbun', es: 'Periódico', blocks: ['し', 'ん', 'ぶ', 'ん'] }
+        ]
+      }),
+      buildKanaLesson({
+        id: 'kana-cap-9',
+        number: 9,
+        title: 'Consonante Doble (っ) y Diptongos (きゃ・しゃ・ちゃ)',
+        desc: 'Domina el pequeño っ (pausa) y las combinaciones pequeñas や・ゆ・よ.',
+        ruleTitle: 'Sokuon (っ pequeño) y Yoon (きゃ, しゃ, ちゃ)',
+        ruleBody: '1) Un **っ (tsu pequeño)** no suena como "tsu": duplica la consonante siguiente creando una breve pausa (ej. **きって** = *kitte*). 2) Una sílaba con *i* (**き, し, ち, に**) seguida de **ゃ, ゅ, ょ pequeños** se fusiona en una sola sílaba: **きゃ (kya), しゃ (sha), ちゃ (cha), りょ (ryo)**.',
+        chars: [
+          { char: 'っ', romaji: 'pausa', hint: 'Trazo idéntico a つ pero escrito a la mitad de tamaño.' },
+          { char: 'きゃ', romaji: 'kya', hint: 'き + や pequeño.' },
+          { char: 'しゃ', romaji: 'sha', hint: 'し + や pequeño.' },
+          { char: 'ちゃ', romaji: 'cha', hint: 'ち + や pequeño.' },
+          { char: 'りょ', romaji: 'ryo', hint: 'り + よ pequeño.' }
+        ],
+        words: [
+          { jp: 'きって', romaji: 'kitte', es: 'Estampilla / Sello postal', blocks: ['き', 'っ', 'て'] },
+          { jp: 'おちゃ', romaji: 'ocha', es: 'Té verde', blocks: ['お', 'ちゃ'] },
+          { jp: 'でんしゃ', romaji: 'densha', es: 'Tren eléctrico', blocks: ['で', 'ん', 'しゃ'] },
+          { jp: 'りょこう', romaji: 'ryokou', es: 'Viaje', blocks: ['りょ', 'こ', 'う'] }
+        ]
+      })
     ];
 
-    const KATAKANA_CHART = [
-      { char: 'ア', romaji: 'a', hint: 'Hacha angular' },
-      { char: 'イ', romaji: 'i', hint: 'Caballete de pintor' },
-      { char: 'ウ', romaji: 'u', hint: 'Techo con paredes' },
-      { char: 'エ', romaji: 'e', hint: 'Viga de acero en I' },
-      { char: 'オ', romaji: 'o', hint: 'Estrella de ópera' },
-      { char: 'カ', romaji: 'ka', hint: 'Idéntico a か pero recto' },
-      { char: 'キ', romaji: 'ki', hint: 'Llave sin pancita' },
-      { char: 'ク', romaji: 'ku', hint: 'Sombrero de chef (cook)' },
-      { char: 'ケ', romaji: 'ke', hint: 'Letra K inclinada' },
-      { char: 'コ', romaji: 'ko', hint: 'Esquina de 90 grados' },
-      { char: 'サ', romaji: 'sa', hint: 'Valla de sardinas' },
-      { char: 'シ', romaji: 'shi', hint: 'Sonrisa mirando de lado' },
-      { char: 'ス', romaji: 'su', hint: 'Esquiador en pendiente' },
-      { char: 'セ', romaji: 'se', hint: 'Silla angular' },
-      { char: 'ソ', romaji: 'so', hint: 'Aguja e hilo' },
-      { char: 'タ', romaji: 'ta', hint: 'Cometa al atardecer' },
-      { char: 'チ', romaji: 'chi', hint: 'Porrista (cheerleader)' },
-      { char: 'ツ', romaji: 'tsu', hint: 'Tres gotas cayendo' },
-      { char: 'テ', romaji: 'te', hint: 'Poste de teléfono' },
-      { char: 'ト', romaji: 'to', hint: 'Tótem con brazo' },
-      { char: 'ナ', romaji: 'na', hint: 'Cruz de nuez' },
-      { char: 'ニ', romaji: 'ni', hint: 'Número dos (ni) en japonés' },
-      { char: 'ヌ', romaji: 'nu', hint: 'Palillos cruzados' },
-      { char: 'ネ', romaji: 'ne', hint: 'Corbata (necktie)' },
-      { char: 'ノ', romaji: 'no', hint: 'Diagonal de NO' },
-      { char: 'ハ', romaji: 'ha', hint: 'Tejado de cabaña (house)' },
-      { char: 'ヒ', romaji: 'hi', hint: 'Tacón (heel)' },
-      { char: 'フ', romaji: 'fu', hint: 'Pico de bandera' },
-      { char: 'ヘ', romaji: 'he', hint: 'Montaña igual que hiragana' },
-      { char: 'ホ', romaji: 'ho', hint: 'Cruz santa (holy)' },
-      { char: 'マ', romaji: 'ma', hint: 'Ángulo de manta raya' },
-      { char: 'ミ', romaji: 'mi', hint: 'Tres rasguños de misil' },
-      { char: 'ム', romaji: 'mu', hint: 'Triángulo abierto' },
-      { char: 'メ', romaji: 'me', hint: 'Cicatriz en X' },
-      { char: 'モ', romaji: 'mo', hint: 'Monitor con antenas' },
-      { char: 'ヤ', romaji: 'ya', hint: 'Yate angular' },
-      { char: 'ユ', romaji: 'yu', hint: 'Periscopio en U' },
-      { char: 'ヨ', romaji: 'yo', hint: 'Letra E al revés' },
-      { char: 'ラ', romaji: 'ra', hint: ' Mecedora' },
-      { char: 'リ', romaji: 'ri', hint: 'Dos trazos de río' },
-      { char: 'ル', romaji: 'ru', hint: 'Raíces de árbol' },
-      { char: 'レ', romaji: 're', hint: 'Palomita de check derecha' },
-      { char: 'ロ', romaji: 'ro', hint: 'Boca de robot cuadrada' },
-      { char: 'ワ', romaji: 'wa', hint: 'Copa de vino (wine)' },
-      { char: 'ヲ', romaji: 'wo', hint: 'Arco olímpico' },
-      { char: 'ン', romaji: 'n', hint: 'Guiño de un solo ojo' }
+    const KATAKANA_LESSONS = [
+      buildKanaLesson({
+        id: 'kana-cap-10',
+        number: 10,
+        title: 'Katakana Vocales y Fila K: アイウエオ • カキクケコ',
+        desc: 'Primeros 10 caracteres angulares del Katakana y el guion largo ー.',
+        ruleTitle: 'Katakana: Vocales, Fila K y Vocal Larga (ー)',
+        ruleBody: 'El **Katakana** representa los mismos sonidos que el Hiragana pero con trazos rectos. Se usa para palabras extranjeras y menús. En Katakana, para alargar cualquier vocal simplemente colocamos el guion **ー**.',
+        chars: [
+          { char: 'ア', romaji: 'a', hint: '2 trazos angulares: horizontal con esquina y curva.' },
+          { char: 'イ', romaji: 'i', hint: '2 trazos como caballete: diagonal superior y vertical.' },
+          { char: 'ウ', romaji: 'u', hint: '3 trazos: tilde arriba y caja con curva derecha.' },
+          { char: 'エ', romaji: 'e', hint: '3 trazos formando una viga en forma de I mayúscula.' },
+          { char: 'オ', romaji: 'o', hint: '3 trazos: cruz recta y diagonal izquierda.' },
+          { char: 'カ', romaji: 'ka', hint: '2 trazos angulares iguales a か pero sin el punto derecho.' },
+          { char: 'キ', romaji: 'ki', hint: '3 trazos: dos horizontales inclinadas y una diagonal.' },
+          { char: 'ク', romaji: 'ku', hint: '2 trazos angulares arriba y a la derecha.' },
+          { char: 'ケ', romaji: 'ke', hint: '3 trazos curvos parecidos a una K.' },
+          { char: 'コ', romaji: 'ko', hint: '2 trazos que dibujan una esquina cuadrada.' }
+        ],
+        words: [
+          { jp: 'ケーキ', romaji: 'keeki', es: 'Pastel (Cake)', blocks: ['ケ', 'ー', 'キ'] },
+          { jp: 'エコ', romaji: 'eko', es: 'Ecológico', blocks: ['エ', 'コ'] },
+          { jp: 'ケア', romaji: 'kea', es: 'Cuidado (Care)', blocks: ['ケ', 'ア'] }
+        ]
+      }),
+      buildKanaLesson({
+        id: 'kana-cap-11',
+        number: 11,
+        title: 'Katakana Filas S y T: サシスセソ • タチツテト',
+        desc: 'Diferencia visualmente シ (shi) de ツ (tsu) y ソ (so) de ン (n).',
+        ruleTitle: 'Truco Maestro: シ (shi) vs ツ (tsu)',
+        ruleBody: 'En **シ (shi)** las dos gotitas están alineadas **verticalmente** y el trazo largo sube desde abajo. En **ツ (tsu)** las dos gotitas están alineadas **horizontalmente** arriba y el trazo largo baja desde arriba.',
+        chars: [
+          { char: 'サ', romaji: 'sa', hint: '3 trazos: horizontal y dos verticales (la derecha curva).' },
+          { char: 'シ', romaji: 'shi', hint: '3 trazos: dos puntos a la izquierda y curva que sube.' },
+          { char: 'ス', romaji: 'su', hint: '2 trazos: ángulo superior y pata derecha diagonal.' },
+          { char: 'セ', romaji: 'se', hint: '2 trazos: horizontal con gancho y L inferior.' },
+          { char: 'ソ', romaji: 'so', hint: '2 trazos: tilde arriba y curva que baja de arriba a abajo.' },
+          { char: 'タ', romaji: 'ta', hint: '3 trazos: como ク pero con un trazo interior.' },
+          { char: 'チ', romaji: 'chi', hint: '3 trazos: diagonal superior, horizontal y vertical curva.' },
+          { char: 'ツ', romaji: 'tsu', hint: '3 trazos: dos puntos arriba en fila y diagonal que baja.' },
+          { char: 'テ', romaji: 'te', hint: '3 trazos: dos horizontales y una vertical curva central.' },
+          { char: 'ト', romaji: 'to', hint: '2 trazos: vertical recta y diagonal corta derecha.' }
+        ],
+        words: [
+          { jp: 'タクシー', romaji: 'takushii', es: 'Taxi', blocks: ['タ', 'ク', 'シ', 'ー'] },
+          { jp: 'テスト', romaji: 'tesuto', es: 'Examen / Test', blocks: ['テ', 'ス', 'ト'] },
+          { jp: 'ソース', romaji: 'soosu', es: 'Salsa (Sauce)', blocks: ['ソ', 'ー', 'ス'] },
+          { jp: 'シャツ', romaji: 'shatsu', es: 'Camisa (Shirt)', blocks: ['シャ', 'ツ'] }
+        ]
+      }),
+      buildKanaLesson({
+        id: 'kana-cap-12',
+        number: 12,
+        title: 'Katakana Filas N y H: ナニヌネノ • ハヒフヘホ',
+        desc: 'Aprende a leer palabras cotidianas como ノート (cuaderno) y コーヒー (café).',
+        ruleTitle: 'Katakana Filas N y H',
+        ruleBody: 'Fíjate en **ニ (ni)** que es idéntico al número dos en Kanji (二), y **ヘ (he)** que es prácticamente idéntico a su versión en Hiragana (へ).',
+        chars: [
+          { char: 'ナ', romaji: 'na', hint: '2 trazos: cruz simple con la vertical curva.' },
+          { char: 'ニ', romaji: 'ni', hint: '2 trazos horizontales paralelos.' },
+          { char: 'ヌ', romaji: 'nu', hint: '2 trazos: ángulo tipo 7 cruzado por una diagonal.' },
+          { char: 'ネ', romaji: 'ne', hint: '4 trazos: tilde arriba, ángulo, vertical y diagonal derecha.' },
+          { char: 'ノ', romaji: 'no', hint: '1 solo trazo diagonal curvo de arriba a la izquierda.' },
+          { char: 'ハ', romaji: 'ha', hint: '2 trazos separados que se abren como un tejado.' },
+          { char: 'ヒ', romaji: 'hi', hint: '2 trazos: horizontal corta y L redondeada.' },
+          { char: 'フ', romaji: 'fu', hint: '1 trazo en ángulo suave.' },
+          { char: 'ヘ', romaji: 'he', hint: '1 trazo en forma de montaña.' },
+          { char: 'ホ', romaji: 'ho', hint: '4 trazos: cruz central con dos tildes laterales abajo.' }
+        ],
+        words: [
+          { jp: 'コーヒー', romaji: 'koohii', es: 'Café (Coffee)', blocks: ['コ', 'ー', 'ヒ', 'ー'] },
+          { jp: 'ノート', romaji: 'nooto', es: 'Cuaderno (Note)', blocks: ['ノ', 'ー', 'ト'] },
+          { jp: 'ナイフ', romaji: 'naifu', es: 'Cuchillo (Knife)', blocks: ['ナ', 'イ', 'フ'] },
+          { jp: 'テニス', romaji: 'tenisu', es: 'Tenis', blocks: ['テ', 'ニ', 'ス'] }
+        ]
+      }),
+      buildKanaLesson({
+        id: 'kana-cap-13',
+        number: 13,
+        title: 'Katakana Filas M y Y: マミムメモ • ヤユヨ',
+        desc: 'Domina caracteres clave para leer カメラ (cámara) y メニュー (menú).',
+        ruleTitle: 'Katakana Filas M y Y',
+        ruleBody: 'Con la fila M y Y desbloqueas decenas de palabras de viaje, fotografía y restaurantes como **カメラ (cámara)**, **メニュー (menú)** y **メモ (nota)**.',
+        chars: [
+          { char: 'マ', romaji: 'ma', hint: '2 trazos: ángulo horizontal y diagonal corta abajo.' },
+          { char: 'ミ', romaji: 'mi', hint: '3 trazos horizontales inclinados paralelos.' },
+          { char: 'ム', romaji: 'mu', hint: '2 trazos formando un triángulo abierto.' },
+          { char: 'メ', romaji: 'me', hint: '2 trazos diagonales que se cruzan como una X.' },
+          { char: 'モ', romaji: 'mo', hint: '3 trazos: dos horizontales y una L que las cruza.' },
+          { char: 'ヤ', romaji: 'ya', hint: '2 trazos: ángulo y diagonal larga que cruza.' },
+          { char: 'ユ', romaji: 'yu', hint: '2 trazos: esquina que baja sobre una línea horizontal.' },
+          { char: 'ヨ', romaji: 'yo', hint: '3 trazos como una E mayúscula volteada hacia la izquierda.' }
+        ],
+        words: [
+          { jp: 'カメラ', romaji: 'kamera', es: 'Cámara', blocks: ['カ', 'メ', 'ラ'] },
+          { jp: 'メニュー', romaji: 'menyuu', es: 'Menú', blocks: ['メ', 'ニュ', 'ー'] },
+          { jp: 'メモ', romaji: 'memo', es: 'Nota / Apunte', blocks: ['メ', 'モ'] }
+        ]
+      }),
+      buildKanaLesson({
+        id: 'kana-cap-14',
+        number: 14,
+        title: 'Katakana Filas R, W y ン: ラリルレロ • ワヲン',
+        desc: 'Completa los 46 Katakana y lee ラーメン (ramen), ホテル (hotel) y トイレ (baño).',
+        ruleTitle: 'Cierre de los 46 Katakana Base',
+        ruleBody: 'La fila R en Katakana es indispensable en cualquier viaje a Japón porque adapta tanto la **R** como la **L** extranjeras: **ホテル (hoteru = hotel)**, **ラーメン (raamen)**, **トイレ (toire = baño)** y **レストラン (resutoran)**.',
+        chars: [
+          { char: 'ラ', romaji: 'ra', hint: '2 trazos: línea horizontal arriba y ángulo curvo abajo.' },
+          { char: 'リ', romaji: 'ri', hint: '2 trazos verticales (igual que en Hiragana pero más rectos).' },
+          { char: 'ル', romaji: 'ru', hint: '2 trazos: diagonal izquierda y L con gancho derecho.' },
+          { char: 'レ', romaji: 're', hint: '1 trazo vertical que sube en diagonal hacia la derecha.' },
+          { char: 'ロ', romaji: 'ro', hint: '3 trazos formando un cuadrado cerrado.' },
+          { char: 'ワ', romaji: 'wa', hint: '2 trazos: vertical corta izquierda y ángulo curvo.' },
+          { char: 'ヲ', romaji: 'wo', hint: '3 trazos: dos horizontales arriba y diagonal curva.' },
+          { char: 'ン', romaji: 'n', hint: '2 trazos: tilde a la izquierda y curva que sube desde abajo.' }
+        ],
+        words: [
+          { jp: 'ラーメン', romaji: 'raamen', es: 'Ramen', blocks: ['ラ', 'ー', 'メ', 'ン'] },
+          { jp: 'ホテル', romaji: 'hoteru', es: 'Hotel', blocks: ['ホ', 'テ', 'ル'] },
+          { jp: 'トイレ', romaji: 'toire', es: 'Baño / Sanitario', blocks: ['ト', 'イ', 'レ'] },
+          { jp: 'レストラン', romaji: 'resutoran', es: 'Restaurante', blocks: ['レ', 'ス', 'ト', 'ラ', 'ン'] }
+        ]
+      }),
+      buildKanaLesson({
+        id: 'kana-cap-15',
+        number: 15,
+        title: 'Katakana Dakuten, ッ y Sonidos Especiales (ファ・ティ・ウィ)',
+        desc: 'Combinaciones exclusivas del Katakana para sonidos extranjeros como F, V, TI y WI.',
+        ruleTitle: 'Sonidos Modernos en Katakana',
+        ruleBody: 'Al igual que en Hiragana, usamos **゛** y **゜** (ej. **バ ba, パ pa, ビ bi, ピ pi**), además del **ッ pequeño** para duplicar consonantes. Además, el Katakana une **フ + vocal pequeña** para crear **ファ (fa), フィ (fi), フェ (fe), フォ (fo)** y **ティ (ti)**.',
+        chars: [
+          { char: 'バ', romaji: 'ba', hint: 'ハ + dakuten.' },
+          { char: 'パ', romaji: 'pa', hint: 'ハ + handakuten (circulito).' },
+          { char: 'ビ', romaji: 'bi', hint: 'ヒ + dakuten.' },
+          { char: 'ッ', romaji: 'pausa', hint: 'ツ pequeño para duplicar consonante.' },
+          { char: 'ファ', romaji: 'fa', hint: 'フ + ア pequeño.' },
+          { char: 'ティ', romaji: 'ti', hint: 'テ + イ pequeño.' }
+        ],
+        words: [
+          { jp: 'コンビニ', romaji: 'konbini', es: 'Tienda de conveniencia (7-Eleven / Lawson)', blocks: ['コ', 'ン', 'ビ', 'ニ'] },
+          { jp: 'バス', romaji: 'basu', es: 'Autobús', blocks: ['バ', 'ス'] },
+          { jp: 'パン', romaji: 'pan', es: 'Pan', blocks: ['パ', 'ン'] },
+          { jp: 'パーティー', romaji: 'paatii', es: 'Fiesta (Party)', blocks: ['パ', 'ー', 'ティ', 'ー'] }
+        ]
+      })
     ];
 
-    /**************************************************************
-     * CURRÍCULO ESTILO BUNPO (4 Módulos progresivos: Hiragana, Katakana, N5 Parte 1, N5 Parte 2)
-     **************************************************************/
-    const BUNPO_COURSES = [
+    const BASICS_LESSONS = [
       {
-        id: 'hiragana',
-        badge: 'KANA 1',
-        title: 'Hiragana desde Cero',
-        subtitle: 'Aprende el trazo, sonido y primeras palabras en Hiragana',
-        lessons: [
+        id: 'kana-cap-16',
+        title: 'Cap. 16: Saludos Esenciales (あいさつ)',
+        desc: 'Buenos días, buenas tardes, gracias, disculpa y permiso en situaciones reales.',
+        isKanaLesson: false,
+        theory: [
           {
-            id: 'hira-1',
-            title: 'Vocales Base: あ い う え お',
-            desc: 'Los 5 sonidos fundamentales del japonés y lectura de tus primeras palabras.',
-            isKanaLesson: true,
-            theory: [
-              {
-                heading: 'Las 5 Vocales Japonesas',
-                body: 'A diferencia del inglés, cada vocal japonesa tiene **un único sonido fijo y puro**, muy similar al español: **あ (a), い (i), う (u), え (e), お (o)**.',
-                formula: 'あ (a) • い (i) • う (u) • え (e) • お (o)',
-                examples: [
-                  { jp: 'あい', furi: 'あい', romaji: 'ai', es: 'Amor', audio: 'あい' },
-                  { jp: 'うえ', furi: 'うえ', romaji: 'ue', es: 'Arriba / Encima', audio: 'うえ' },
-                  { jp: 'あおい', furi: 'あおい', romaji: 'aoi', es: 'Azul', audio: 'あおい' }
-                ]
-              }
-            ],
-            drawChars: [
-              { char: 'あ', romaji: 'a', strokes: '3 trazos: horizontal arriba, vertical curva y lazo final.' },
-              { char: 'い', romaji: 'i', strokes: '2 trazos verticales ligeramente curvos de izquierda a derecha.' },
-              { char: 'う', romaji: 'u', strokes: '2 trazos: tilde superior y arco curvo hacia abajo.' },
-              { char: 'え', romaji: 'e', strokes: '2 trazos: tilde arriba y línea en zigzag fluido.' },
-              { char: 'お', romaji: 'o', strokes: '3 trazos: cruz a la izquierda con bucle continuo y punto a la derecha.' }
-            ],
-            questions: [
-              {
-                type: 'blocks',
-                prompt: 'Arma la palabra japonesa para decir **"Azul"** (aoi):',
-                audioHint: 'あおい',
-                answer: ['あ', 'お', 'い'],
-                pool: ['あ', 'お', 'い', 'う', 'え'],
-                explanation: 'あ (a) + お (o) + い (i) forma あおい (aoi = azul).'
-              },
-              {
-                type: 'blocks',
-                prompt: 'Arma la palabra para **"Arriba"** (ue):',
-                audioHint: 'うえ',
-                answer: ['う', 'え'],
-                pool: ['う', 'え', 'あ', 'お'],
-                explanation: 'う (u) + え (e) significa "arriba" (うえ).'
-              },
-              {
-                type: 'fill',
-                prompt: 'Completa la palabra **"Amor"** (ai):',
-                jpSentence: 'あ [ ___ ]',
-                options: ['い', 'う', 'え', 'お'],
-                correct: 'い',
-                audio: 'あい',
-                explanation: 'あい (ai) significa amor.'
-              }
+            heading: 'Saludos del Día a Día en Japón',
+            body: 'Ahora que dominas Hiragana y Katakana, puedes leer las expresiones más importantes de cortesía japonesa sin depender del Romaji.',
+            formula: 'おはようございます • こんにちは • ありがとうございます',
+            examples: [
+              { jp: 'おはようございます', tokens: [], romaji: 'Ohayou gozaimasu', es: 'Buenos días (cortés)', audio: 'おはようございます' },
+              { jp: 'こんにちは', tokens: [], romaji: 'Konnichiwa', es: 'Buenas tardes / Hola (nota: se escribe con は final)', audio: 'こんにちは' },
+              { jp: 'こんばんは', tokens: [], romaji: 'Konbanwa', es: 'Buenas noches (al saludar)', audio: 'こんばんは' },
+              { jp: 'ありがとうございます', tokens: [], romaji: 'Arigatou gozaimasu', es: 'Muchas gracias', audio: 'ありがとうございます' },
+              { jp: 'すみません', tokens: [], romaji: 'Sumimasen', es: 'Disculpe / Con permiso / Perdón', audio: 'すみません' }
             ]
+          }
+        ],
+        questions: [
+          {
+            type: 'blocks',
+            prompt: 'Ordena los bloques para decir **"Disculpe / Con permiso"** (sumimasen):',
+            audioHint: 'すみません',
+            answer: ['す', 'み', 'ま', 'せ', 'ん'],
+            pool: ['す', 'み', 'ま', 'せ', 'ん', 'か'],
+            explanation: 'すみません (sumimasen) se usa para llamar al mesero, pedir permiso al pasar o disculparse.'
           },
           {
-            id: 'hira-2',
-            title: 'Filas K y S: かきくけこ • さしすせそ',
-            desc: 'Combina consonantes con las 5 vocales y forma sustantivos reales.',
-            isKanaLesson: true,
-            theory: [
-              {
-                heading: 'Sílabas con K y S',
-                body: 'El japonés es silábico: unes una consonante con cada vocal (**ka, ki, ku, ke, ko**). En la fila S ocurre una excepción importante: no existe "si", se pronuncia **し (shi)**.',
-                formula: 'か (ka) き (ki) く (ku) け (ke) こ (ko) / さ (sa) し (shi)',
-                examples: [
-                  { jp: 'すし', furi: 'すし', romaji: 'sushi', es: 'Sushi', audio: 'すし' },
-                  { jp: 'かさ', furi: 'かさ', romaji: 'kasa', es: 'Paraguas', audio: 'かさ' },
-                  { jp: 'ここ', furi: 'ここ', romaji: 'koko', es: 'Aquí', audio: 'ここ' }
-                ]
-              }
-            ],
-            drawChars: [
-              { char: 'か', romaji: 'ka', strokes: '3 trazos: gancho principal, vertical que cruza y trazo corto derecho.' },
-              { char: 'き', romaji: 'ki', strokes: '3 o 4 trazos: dos horizontales inclinadas, diagonal y curva inferior.' },
-              { char: 'さ', romaji: 'sa', strokes: '3 trazos: una horizontal, diagonal que la cruza y curva inferior.' },
-              { char: 'し', romaji: 'shi', strokes: '1 solo trazo continuo vertical con curva hacia arriba como anzuelo.' },
-              { char: 'す', romaji: 'su', strokes: '2 trazos: horizontal y vertical que hace un bucle en el centro.' }
-            ],
-            questions: [
-              {
-                type: 'blocks',
-                prompt: 'Ordena los bloques para escribir **"Sushi"** (sushi):',
-                audioHint: 'すし',
-                answer: ['す', 'し'],
-                pool: ['す', 'し', 'さ', 'き'],
-                explanation: 'す (su) + し (shi) = すし.'
-              },
-              {
-                type: 'blocks',
-                prompt: 'Ordena los bloques para escribir **"Paraguas"** (kasa):',
-                audioHint: 'かさ',
-                answer: ['か', 'さ'],
-                pool: ['か', 'さ', 'こ', 'け'],
-                explanation: 'か (ka) + さ (sa) = かさ (paraguas).'
-              },
-              {
-                type: 'fill',
-                prompt: 'Selecciona el carácter para completar **"Aquí"** (koko):',
-                jpSentence: 'こ [ ___ ]',
-                options: ['こ', 'か', 'き', 'く'],
-                correct: 'こ',
-                audio: 'ここ',
-                explanation: 'ここ (koko) significa "aquí".'
-              }
-            ]
+            type: 'fill',
+            prompt: 'Completa el saludo **"Buenas tardes / Hola"** (konnichiwa):',
+            jpSentence: 'こんにち [ ___ ]',
+            options: ['は', 'わ', 'か', 'に'],
+            correct: 'は',
+            audio: 'こんにちは',
+            explanation: 'Aunque suena "wa", en こんにちは y こんばんは siempre se escribe con el hiragana は.'
+          },
+          {
+            type: 'blocks',
+            prompt: 'Arma la expresión **"Muchas gracias"**:',
+            audioHint: 'ありがとうございます',
+            answer: ['ありがとう', 'ございます'],
+            pool: ['ございます', 'ありがとう', 'おはよう', 'すみません'],
+            explanation: 'ありがとうございます es la forma cortés estándar de agradecer.'
+          },
+          {
+            type: 'input',
+            prompt: 'Escribe en japonés o romaji cómo se dice **"Disculpe"** al llamar a alguien en una tienda:',
+            jpDisplay: '[ Disculpe ]、これ を ください。',
+            accepted: ['すみません', 'sumimasen'],
+            audio: 'すみません',
+            explanation: 'すみません (sumimasen) = Disculpe.'
           }
         ]
       },
       {
-        id: 'katakana',
-        badge: 'KANA 2',
-        title: 'Katakana Esencial',
-        subtitle: 'Domina el silabario angular para préstamos, menús y letreros en Japón',
-        lessons: [
+        id: 'kana-cap-17',
+        title: 'Cap. 17: Números del 1 al 100 y Precios',
+        desc: 'Contar del 1 al 100, excepciones fonéticas (4, 7, 9) y leer precios en Yenes (円).',
+        isKanaLesson: false,
+        theory: [
           {
-            id: 'kata-1',
-            title: 'Katakana de Viaje y Menús',
-            desc: 'Trazos angulares y el guion largo ー para estirar vocales.',
-            isKanaLesson: true,
-            theory: [
-              {
-                heading: '¿Cuándo se usa el Katakana?',
-                body: 'El **Katakana** representa exactamente los mismos sonidos que el Hiragana, pero con trazos rectos y angulares. Se usa para palabras extranjeras, tecnología y comida internacional. El guion largo **ー** duplica la duración de la vocal anterior.',
-                formula: 'コ (ko) + ー + ヒ (hi) + ー ＝ コーヒー (Café)',
-                examples: [
-                  { jp: 'コーヒー', furi: 'コーヒー', romaji: 'koohii', es: 'Café', audio: 'コーヒー' },
-                  { jp: 'カメラ', furi: 'カメラ', romaji: 'kamera', es: 'Cámara', audio: 'カメラ' },
-                  { jp: 'ラーメン', furi: 'ラーメン', romaji: 'raamen', es: 'Ramen', audio: 'ラーメン' }
-                ]
-              }
-            ],
-            drawChars: [
-              { char: 'カ', romaji: 'ka', strokes: '2 trazos rectos angulares (sin el trazo derecho de hiragana).' },
-              { char: 'メ', romaji: 'me', strokes: '2 trazos diagonales que se cruzan como una X.' },
-              { char: 'ラ', romaji: 'ra', strokes: '2 trazos: línea horizontal corta arriba y ángulo curvo abajo.' },
-              { char: 'コ', romaji: 'ko', strokes: '2 trazos formando una esquina cuadrada derecha.' }
-            ],
-            questions: [
-              {
-                type: 'blocks',
-                prompt: 'Arma en Katakana la palabra **"Cámara"** (kamera):',
-                audioHint: 'カメラ',
-                answer: ['カ', 'メ', 'ラ'],
-                pool: ['カ', 'メ', 'ラ', 'コ', 'ー'],
-                explanation: 'カ (ka) + メ (me) + ラ (ra) = カメラ.'
-              },
-              {
-                type: 'blocks',
-                prompt: 'Arma la palabra **"Café"** (koohii):',
-                audioHint: 'コーヒー',
-                answer: ['コ', 'ー', 'ヒ', 'ー'],
-                pool: ['コ', 'ー', 'ヒ', 'ー', 'カ'],
-                explanation: 'コーヒー estira tanto la "o" como la "i" con el símbolo ー.'
-              },
-              {
-                type: 'input',
-                prompt: 'Escribe en Romaji cómo suena **カメラ** (Cámara):',
-                jpDisplay: 'カメラ',
-                accepted: ['kamera', 'camera', 'カメラ'],
-                audio: 'カメラ',
-                explanation: 'カ (ka) + メ (me) + ラ (ra) se lee "kamera".'
-              }
+            heading: 'Números Japoneses y Combinación de Decenas',
+            body: 'En japonés, una vez que sabes del **1 al 10**, puedes formar hasta el **99** como una multiplicación lógica: **20** es "dos-diez" (**<ruby>二十<rt>にじゅう</rt></ruby>**), **35** es "tres-diez-cinco" (**<ruby>三十五<rt>さんじゅうご</rt></ruby>**).',
+            formula: '<ruby>一<rt>いち</rt></ruby>(1) <ruby>二<rt>に</rt></ruby>(2) <ruby>三<rt>さん</rt></ruby>(3) <ruby>四<rt>よん</rt></ruby>(4) <ruby>五<rt>ご</rt></ruby>(5) <ruby>六<rt>ろく</rt></ruby>(6) <ruby>七<rt>なな</rt></ruby>(7) <ruby>八<rt>はち</rt></ruby>(8) <ruby>九<rt>きゅう</rt></ruby>(9) <ruby>十<rt>じゅう</rt></ruby>(10) <ruby>百<rt>ひゃく</rt></ruby>(100)',
+            examples: [
+              { jp: '<ruby>百円<rt>ひゃくえん</rt></ruby>', tokens: [], romaji: 'Hyaku en', es: '100 yenes', audio: 'ひゃくえん' },
+              { jp: '<ruby>二十五<rt>にじゅうご</rt></ruby>', tokens: [], romaji: 'Nijuu go', es: '25 (Dos dieces + cinco)', audio: 'にじゅうご' },
+              { jp: '<ruby>三百円<rt>さんびゃくえん</rt></ruby>', tokens: [], romaji: 'Sanbyaku en', es: '300 yenes (nota: hyaku cambia a byaku con 3)', audio: 'さんびゃくえん' }
             ]
+          }
+        ],
+        questions: [
+          {
+            type: 'blocks',
+            prompt: 'Forma el número **25** ("dos - diez - cinco"):',
+            audioHint: 'にじゅうご',
+            answer: ['に', 'じゅう', 'ご'],
+            pool: ['に', 'じゅう', 'ご', 'さん', 'ひゃく'],
+            explanation: 'に (2) + じゅう (10) + ご (5) = にじゅうご (25).'
+          },
+          {
+            type: 'fill',
+            prompt: 'Selecciona cómo se dice **"100 yenes"**:',
+            jpSentence: '[ ___ ] <ruby>円<rt>えん</rt></ruby>',
+            options: ['ひゃく', 'じゅう', 'せん', 'いち'],
+            correct: 'ひゃく',
+            audio: 'ひゃくえん',
+            explanation: '百 (ひゃく / hyaku) es 100, y 円 (えん / en) es yenes.'
+          },
+          {
+            type: 'input',
+            prompt: 'Escribe en romaji o hiragana el número **10**:',
+            jpDisplay: '<ruby>十<rt>？</rt></ruby>',
+            accepted: ['じゅう', 'juu', 'jū', 'ju'],
+            audio: 'じゅう',
+            explanation: '十 se lee じゅう (juu).'
           }
         ]
       },
       {
-        id: 'n5-core',
-        badge: 'JLPT N5 • UNIDAD 1',
-        title: 'Estructura Oracional y Partículas',
-        subtitle: 'Oraciones con です, preguntas con か, objetos con を y destinos con に / で',
-        lessons: [
+        id: 'kana-cap-18',
+        title: 'Cap. 18: Expresiones de Mesa y Supervivencia',
+        desc: 'いただきます, ごちそうさまでした, おねがいします y preguntas rápidas.',
+        isKanaLesson: false,
+        theory: [
           {
-            id: 'n5-1',
-            title: 'Afirmar y Negar: は (wa) y です',
-            desc: 'Presentarte, indicar el tema de la oración y negar con じゃありません.',
-            isKanaLesson: false,
-            theory: [
-              {
-                heading: 'A は B です (A es B)',
-                body: 'La partícula <span class="pt-tag">は</span> (se escribe *ha* pero como partícula siempre se pronuncia **wa**) marca el tema de la oración. Al final colocamos <span class="pt-tag">です</span> (*desu*) para dar cortesía y afirmar "ser/estar".',
-                formula: '[Tema] + <span class="pt-tag">は</span> + [Sustantivo] + <span class="pt-tag">です</span>',
-                examples: [
-                  {
-                    jp: '<ruby>私<rt>わたし</rt></ruby>は<ruby>学生<rt>がくせい</rt></ruby>です。',
-                    tokens: ['私', 'は', '学生', 'です'],
-                    romaji: 'Watashi wa gakusei desu.',
-                    es: 'Yo soy estudiante.',
-                    audio: 'わたしはがくせいです'
-                  },
-                  {
-                    jp: '<ruby>私<rt>わたし</rt></ruby>は<ruby>先生<rt>せんせい</rt></ruby>じゃありません。',
-                    tokens: ['私', 'は', '先生', 'じゃありません'],
-                    romaji: 'Watashi wa sensei ja arimasen.',
-                    es: 'Yo no soy profesor.',
-                    audio: 'わたしはせんせいじゃありません'
-                  }
-                ]
-              },
-              {
-                heading: 'Preguntas con か (ka)',
-                body: 'En japonés no necesitas invertir el orden de las palabras para preguntar. Simplemente añade <span class="pt-tag">か</span> al final de la oración con entonación ascendente.',
-                formula: '[Oración] + <span class="pt-tag">です</span> + <span class="pt-tag">か</span>？',
-                examples: [
-                  {
-                    jp: '<ruby>日本人<rt>にほんじん</rt></ruby>ですか。',
-                    tokens: ['日本人', 'です', 'か'],
-                    romaji: 'Nihonjin desu ka?',
-                    es: '¿Eres japonés?',
-                    audio: 'にほんじんですか'
-                  }
-                ]
-              }
-            ],
-            questions: [
-              {
-                type: 'fill',
-                prompt: 'Elige la partícula que marca el tema en **"Yo soy estudiante"**:',
-                jpSentence: '<ruby>私<rt>わたし</rt></ruby> [ ___ ] <ruby>学生<rt>がくせい</rt></ruby>です。',
-                options: ['は', 'を', 'に', 'か'],
-                correct: 'は',
-                audio: 'わたしはがくせいです',
-                explanation: 'は (wa) marca el tema principal de quien hablamos (私 = yo).'
-              },
-              {
-                type: 'blocks',
-                prompt: 'Ordena los bloques para decir: **"Yo no soy profesor"**',
-                audioHint: 'わたしはせんせいじゃありません',
-                answer: ['<ruby>私<rt>わたし</rt></ruby>', 'は', '<ruby>先生<rt>せんせい</rt></ruby>', 'じゃありません'],
-                pool: ['<ruby>先生<rt>せんせい</rt></ruby>', 'は', 'じゃありません', '<ruby>私<rt>わたし</rt></ruby>', 'か'],
-                explanation: 'じゃありません es la forma negativa cortés de です.'
-              },
-              {
-                type: 'input',
-                prompt: 'Escribe en japonés o romaji la partícula que convierte una oración en **pregunta**:',
-                jpDisplay: '<ruby>学生<rt>がくせい</rt></ruby>です [ ？ ]',
-                accepted: ['か', 'ka'],
-                audio: 'がくせいですか',
-                explanation: 'Añadir か (ka) al final equivale a un signo de interrogación hablado.'
-              }
-            ]
-          },
-          {
-            id: 'n5-2',
-            title: 'Demostrativos y Posesión: これ / それ / の',
-            desc: 'Señalar objetos cercanos o lejanos y conectar sustantivos con の.',
-            isKanaLesson: false,
-            theory: [
-              {
-                heading: 'これ (Esto) • それ (Eso) • あれ (Aquello)',
-                body: 'Funcionan exactamente como en español según la distancia al hablante: **これ** (cerca de mí), **それ** (cerca de ti) y **あれ** (lejos de ambos). Para unir dos sustantivos ("el libro de mí" = mi libro), usamos <span class="pt-tag">の</span>.',
-                formula: '[Poseedor] + <span class="pt-tag">の</span> + [Objeto]',
-                examples: [
-                  {
-                    jp: 'これは<ruby>私<rt>わたし</rt></ruby>のカメラです。',
-                    tokens: ['これ', 'は', '私', 'の', 'カメラ', 'です'],
-                    romaji: 'Kore wa watashi no kamera desu.',
-                    es: 'Esta es mi cámara.',
-                    audio: 'これはわたしのカメラです'
-                  },
-                  {
-                    jp: 'それは<ruby>日本語<rt>にほんご</rt></ruby>の<ruby>本<rt>ほん</rt></ruby>ですか。',
-                    tokens: ['それ', 'は', '本', 'です', 'か'],
-                    romaji: 'Sore wa nihongo no hon desu ka?',
-                    es: '¿Ese es un libro de japonés?',
-                    audio: 'それはにほんごのほんですか'
-                  }
-                ]
-              }
-            ],
-            questions: [
-              {
-                type: 'fill',
-                prompt: 'Completa: **"Esta es mi cámara"** (cerca de mí):',
-                jpSentence: '[ ___ ] は<ruby>私<rt>わたし</rt></ruby>のカメラです。',
-                options: ['これ', 'それ', 'あれ', 'どれ'],
-                correct: 'これ',
-                audio: 'これはわたしのカメラです',
-                explanation: 'これ (kore) se usa para objetos que tienes en tus manos o muy cerca de ti.'
-              },
-              {
-                type: 'blocks',
-                prompt: 'Ordena los bloques para decir: **"Mi libro"** (El libro de mí):',
-                audioHint: 'わたしのほん',
-                answer: ['<ruby>私<rt>わたし</rt></ruby>', 'の', '<ruby>本<rt>ほん</rt></ruby>'],
-                pool: ['<ruby>本<rt>ほん</rt></ruby>', 'の', '<ruby>私<rt>わたし</rt></ruby>', 'は'],
-                explanation: 'En japonés el poseedor va primero: 私の本 (watashi no hon).'
-              },
-              {
-                type: 'input',
-                prompt: 'Escribe en hiragana o romaji cómo se dice **"Eso"** (cerca de la otra persona):',
-                jpDisplay: '[ Eso ] はカメラです。',
-                accepted: ['それ', 'sore'],
-                audio: 'それはカメラです',
-                explanation: 'それ (sore) señala algo cercano a tu interlocutor.'
-              }
-            ]
-          },
-          {
-            id: 'n5-3',
-            title: 'Verbos de Acción y Partícula を (o)',
-            desc: 'Estructura Sujeto-Objeto-Verbo y cómo pedir u ordenar en restaurantes.',
-            isKanaLesson: false,
-            theory: [
-              {
-                heading: 'El Verbo Siempre va al Final',
-                body: 'En japonés el verbo cierra la oración. El objeto directo (lo que comes, bebes o compras) se marca justo después del sustantivo con la partícula <span class="pt-tag">を</span> (se escribe *wo*, se pronuncia **o**).',
-                formula: '[Objeto] + <span class="pt-tag">を</span> + [Verbo ~ます / ください]',
-                examples: [
-                  {
-                    jp: '<ruby>寿司<rt>すし</rt></ruby>を<ruby>食<rt>た</rt></ruby>べます。',
-                    tokens: ['寿司', 'を', '食べます'],
-                    romaji: 'Sushi o tabemasu.',
-                    es: 'Como sushi / Comeré sushi.',
-                    audio: 'すしをたべます'
-                  },
-                  {
-                    jp: '<ruby>水<rt>みず</rt></ruby>をください。',
-                    tokens: ['水', 'を', 'ください'],
-                    romaji: 'Mizu o kudasai.',
-                    es: 'Agua, por favor (Dame agua).',
-                    audio: 'みずをください'
-                  }
-                ]
-              }
-            ],
-            questions: [
-              {
-                type: 'fill',
-                prompt: 'Completa la oración: **"Bebo café"**',
-                jpSentence: 'コーヒー [ ___ ] <ruby>飲<rt>の</rt></ruby>みます。',
-                options: ['を', 'は', 'に', 'の'],
-                correct: 'を',
-                audio: 'コーヒーをのみます',
-                explanation: 'La partícula を marca a コーヒー como el objeto directo del verbo 飲みます (beber).'
-              },
-              {
-                type: 'blocks',
-                prompt: 'Forma la oración: **"Como ramen en el restaurante"**',
-                audioHint: 'レストランでラーメンをたべます',
-                answer: ['レストランで', 'ラーメン', 'を', '<ruby>食<rt>た</rt></ruby>べます'],
-                pool: ['<ruby>食<rt>た</rt></ruby>べます', 'ラーメン', 'を', 'レストランで'],
-                explanation: 'で marca el lugar de la acción (レストランで) y を el objeto directo.'
-              },
-              {
-                type: 'input',
-                prompt: 'Escribe en romaji o kana la palabra para pedir algo en un restaurante (**"Por favor, dame..."**):',
-                jpDisplay: 'ラーメンを [ ___ ]。',
-                accepted: ['ください', 'kudasai'],
-                audio: 'ラーメンをください',
-                explanation: '[Objeto] + を + ください es la fórmula universal para ordenar en Japón.'
-              }
-            ]
-          },
-          {
-            id: 'n5-4',
-            title: 'Movimiento y Transporte: に vs で',
-            desc: 'Ir a lugares en presente y pasado (行きます / 行きました) usando tren o metro.',
-            isKanaLesson: false,
-            theory: [
-              {
-                heading: 'Medio de Transporte (で) + Destino (に)',
-                body: 'Cuando viajas o te desplazas, usas <span class="pt-tag">で</span> después del vehículo o medio de transporte, y <span class="pt-tag">に</span> (o へ) después de la ciudad o destino al que llegas.',
-                formula: '[Transporte] + <span class="pt-tag">で</span> + [Destino] + <span class="pt-tag">に</span> + <ruby>行<rt>い</rt></ruby>きます',
-                examples: [
-                  {
-                    jp: '<ruby>電車<rt>でんしゃ</rt></ruby>で<ruby>京都<rt>きょうと</rt></ruby>に<ruby>行<rt>い</rt></ruby>きます。',
-                    tokens: ['電車', 'で', '京都', 'に', '行きます'],
-                    romaji: 'Densha de Kyouto ni ikimasu.',
-                    es: 'Voy a Kioto en tren.',
-                    audio: 'でんしゃできょうとにいきます'
-                  },
-                  {
-                    jp: '<ruby>日本<rt>にほん</rt></ruby>に<ruby>行<rt>い</rt></ruby>きました。',
-                    tokens: ['日本', 'に', '行きました'],
-                    romaji: 'Nihon ni ikimashita.',
-                    es: 'Fui a Japón (Pasado).',
-                    audio: 'にほんにいきました'
-                  }
-                ]
-              }
-            ],
-            questions: [
-              {
-                type: 'fill',
-                prompt: 'Elige las partículas correctas: **"Voy a Tokio en tren"**',
-                jpSentence: '<ruby>電車<rt>でんしゃ</rt></ruby> [ ___ ] <ruby>東京<rt>とうきょう</rt></ruby>に<ruby>行<rt>い</rt></ruby>きます。',
-                options: ['で', 'に', 'を', 'は'],
-                correct: 'で',
-                audio: 'でんしゃでとうきょうにいきます',
-                explanation: 'で indica el medio o herramienta con que realizas el desplazamiento (電車 = tren).'
-              },
-              {
-                type: 'blocks',
-                prompt: 'Ordena: **"Fui a Japón"** (en pasado):',
-                audioHint: 'にほんにいきました',
-                answer: ['<ruby>日本<rt>にほん</rt></ruby>', 'に', '<ruby>行<rt>い</rt></ruby>きました'],
-                pool: ['<ruby>行<rt>い</rt></ruby>きました', 'に', '<ruby>日本<rt>にほん</rt></ruby>', 'を'],
-                explanation: '行きました (ikimashita) es el pasado afirmativo de 行きます (ir).'
-              },
-              {
-                type: 'input',
-                prompt: 'Escribe en romaji o japonés el verbo **"Ir"** en presente cortés (ikimasu):',
-                jpDisplay: '<ruby>京都<rt>きょうと</rt></ruby>に [ ___ ]。',
-                accepted: ['いきます', '行きます', 'ikimasu'],
-                audio: 'きょうとにいきます',
-                explanation: '行きます (ikimasu) significa ir.'
-              }
+            heading: 'Frases Imprescindibles en Restaurantes y Tiendas',
+            body: 'Antes de comer siempre se dice **いただきます** (agradezco recibir esta comida) y al terminar **ごちそうさまでした** (fue un gran banquete). Para pedir la cuenta en un restaurante se dice **お<ruby>会計<rt>かいけい</rt></ruby>をお<ruby>願<rt>ねが</rt></ruby>いします**.',
+            formula: 'いただきます (Antes de comer) • ごちそうさまでした (Después de comer)',
+            examples: [
+              { jp: 'いただきます', tokens: [], romaji: 'Itadakimasu', es: 'Buen provecho (dicho por uno mismo antes de comer)', audio: 'いただきます' },
+              { jp: 'ごちそうさまでした', tokens: [], romaji: 'Gochisousama deshita', es: 'Estuvo delicioso / Gracias por la comida (al salir)', audio: 'ごちそうさまでした' },
+              { jp: 'お<ruby>会計<rt>かいけい</rt></ruby>をお<ruby>願<rt>ねが</rt></ruby>いします', tokens: [], romaji: 'Okaikei o onegaishimasu', es: 'La cuenta, por favor', audio: 'おかいけいをおねがいします' }
             ]
           }
-        ]
-      },
-      {
-        id: 'n5-grammar-2',
-        badge: 'JLPT N5 • UNIDAD 2',
-        title: 'Adjetivos, Deseos y Forma -TE',
-        subtitle: 'Conjugación de adjetivos -i / -na, expresar deseos con ~たい y peticiones',
-        lessons: [
+        ],
+        questions: [
           {
-            id: 'n5-5',
-            title: 'Adjetivos -i vs -na (美味しい / 高い / 静か)',
-            desc: 'Cómo describir lugares, precios y comida en positivo y negativo.',
-            isKanaLesson: false,
-            theory: [
-              {
-                heading: 'Cómo negar un Adjetivo -i (~くないです)',
-                body: 'Los adjetivos que terminan en **い** (como <ruby>高<rt>たか</rt></ruby>い = caro, o <ruby>美味<rt>おい</rt></ruby>しい = delicioso) se conjugan por sí mismos: para hacerlos negativos, quitas la **い** final y agregas <span class="pt-tag">くないです</span>.',
-                formula: '<ruby>高<rt>たか</rt></ruby><s>い</s> ＋ <span class="pt-tag">くないです</span> ＝ <ruby>高<rt>たか</rt></ruby>くないです (No es caro)',
-                examples: [
-                  {
-                    jp: 'このラーメンは<ruby>美味<rt>おい</rt></ruby>しいです。',
-                    tokens: ['ラーメン', 'は', '美味しい', 'です'],
-                    romaji: 'Kono raamen wa oishii desu.',
-                    es: 'Este ramen está delicioso.',
-                    audio: 'このラーメンはおいしいです'
-                  },
-                  {
-                    jp: 'あまり<ruby>高<rt>たか</rt></ruby>くないです。',
-                    tokens: ['高くないです'],
-                    romaji: 'Amari takakunai desu.',
-                    es: 'No es muy caro.',
-                    audio: 'あまりたかくないです'
-                  }
-                ]
-              }
-            ],
-            questions: [
-              {
-                type: 'fill',
-                prompt: 'Conjuga el adjetivo <ruby>高<rt>たか</rt></ruby>い (caro) en negativo: **"No es caro"**',
-                jpSentence: 'このカメラは [ ___ ] です。',
-                options: ['高くない', '高いじゃない', '高くません', '高いない'],
-                correct: '高くない',
-                audio: 'このカメラはたかくないです',
-                explanation: 'En los adjetivos -i reemplazamos la い final por くない (takai -> takakunai).'
-              },
-              {
-                type: 'blocks',
-                prompt: 'Ordena: **"El sushi está delicioso"**',
-                audioHint: 'すしはおいしいです',
-                answer: ['<ruby>寿司<rt>すし</rt></ruby>', 'は', '<ruby>美味<rt>おい</rt></ruby>しい', 'です'],
-                pool: ['です', '<ruby>美味<rt>おい</rt></ruby>しい', '<ruby>寿司<rt>すし</rt></ruby>', 'は'],
-                explanation: '美味しいです (oishii desu) describe que una comida sabe muy bien.'
-              },
-              {
-                type: 'input',
-                prompt: 'Escribe en romaji o japonés cómo se dice **"Delicioso"**:',
-                jpDisplay: 'ラーメンは [ ___ ] です。',
-                accepted: ['おいしい', '美味しい', 'oishii'],
-                audio: 'ラーメンはおいしいです',
-                explanation: '美味しい (おいしい / oishii) = delicioso.'
-              }
-            ]
+            type: 'fill',
+            prompt: '¿Qué frase dices justo **antes de empezar a comer**?',
+            jpSentence: '[ ___ ] ！',
+            options: ['いただきます', 'ごちそうさまでした', 'すみません', 'こんばんは'],
+            correct: 'いただきます',
+            audio: 'いただきます',
+            explanation: 'いただきます se dice juntando las manos antes de probar el primer bocado.'
           },
           {
-            id: 'n5-6',
-            title: 'Expresar Deseos (~たい) y Forma -TE',
-            desc: 'Decir qué quieres hacer, qué quieres comprar y pedir favores con ~てください.',
-            isKanaLesson: false,
-            theory: [
-              {
-                heading: 'Querer hacer algo: Raíz verbal + たいです',
-                body: 'Para decir **"Quiero [verbo]"**, toma cualquier verbo en forma *~masu*, quítale **ます** y ponle <span class="pt-tag">たいです</span>. Por ejemplo: <ruby>行<rt>い</rt></ruby>きます (ir) → **<ruby>行<rt>い</rt></ruby>きたいです** (quiero ir).',
-                formula: '<ruby>買<rt>か</rt></ruby>い<s>ます</s> ＋ <span class="pt-tag">たいです</span> ＝ <ruby>買<rt>か</rt></ruby>いたいです (Quiero comprar)',
-                examples: [
-                  {
-                    jp: '<ruby>日本<rt>にほん</rt></ruby>に<ruby>行<rt>い</rt></ruby>きたいです。',
-                    tokens: ['日本', 'に', '行きたい', 'です'],
-                    romaji: 'Nihon ni ikitai desu.',
-                    es: 'Quiero ir a Japón.',
-                    audio: 'にほんにいきたいです'
-                  },
-                  {
-                    jp: 'これを<ruby>見<rt>み</rt></ruby>てください。',
-                    tokens: ['これ', 'を', '見て', 'ください'],
-                    romaji: 'Kore o mite kudasai.',
-                    es: 'Por favor mira esto.',
-                    audio: 'これをみてください'
-                  }
-                ]
-              }
-            ],
-            questions: [
-              {
-                type: 'fill',
-                prompt: 'Transforma <ruby>食<rt>た</rt></ruby>べます (comer) para decir: **"Quiero comer ramen"**',
-                jpSentence: 'ラーメンを [ ___ ] です。',
-                options: ['食べたい', '食べますたい', '食べて', '食べない'],
-                correct: '食べたい',
-                audio: 'ラーメンをたべたいです',
-                explanation: 'Quitamos ます de 食べます y agregamos たい -> 食べたいです (tabetai desu).'
-              },
-              {
-                type: 'blocks',
-                prompt: 'Ordena la petición en Forma -TE: **"Por favor mira esto"**',
-                audioHint: 'これをみてください',
-                answer: ['これ', 'を', '<ruby>見<rt>み</rt></ruby>て', 'ください'],
-                pool: ['ください', '<ruby>見<rt>み</rt></ruby>て', 'これ', 'を'],
-                explanation: '見て (mite) es la forma -TE de 見ます (mirar). + ください pide la acción amablemente.'
-              },
-              {
-                type: 'input',
-                prompt: 'Escribe en romaji o japonés **"Quiero ir"** (a partir de 行きます / ikimasu):',
-                jpDisplay: '<ruby>京都<rt>きょうと</rt></ruby>に [ ___ ] です。',
-                accepted: ['いきたい', '行きたい', 'ikitai'],
-                audio: 'きょうとにいきたいです',
-                explanation: '行き (raíz de ikimasu) + たい = 行きたい (ikitai).'
-              }
-            ]
+            type: 'blocks',
+            prompt: 'Ordena la frase para pedir **"La cuenta, por favor"**:',
+            audioHint: 'おかいけいをおねがいします',
+            answer: ['お<ruby>会計<rt>かいけい</rt></ruby>', 'を', 'お<ruby>願<rt>ねが</rt></ruby>いします'],
+            pool: ['お<ruby>願<rt>ねが</rt></ruby>いします', 'お<ruby>会計<rt>かいけい</rt></ruby>', 'を', 'ください'],
+            explanation: 'お会計 (la cuenta) + を + お願いします (por favor).'
+          },
+          {
+            type: 'input',
+            prompt: 'Escribe en romaji o hiragana cómo se dice **"Sí"** en japonés:',
+            jpDisplay: '[ Sí ]、そうです。',
+            accepted: ['はい', 'hai'],
+            audio: 'はい',
+            explanation: 'はい (hai) significa "Sí".'
           }
         ]
       }
     ];
 
     /**************************************************************
-     * ESTADO PERSISTENTE DEL USUARIO
+     * LOS 20 CAPÍTULOS COMPLETOS DE GRAMÁTICA JLPT N5 (CAPÍTULOS 19 AL 38)
      **************************************************************/
-    const STORAGE_KEY = 'bunpo_pro_state_v1';
+    const N5_LESSONS = [
+      {
+        id: 'n5-cap-19',
+        title: 'Cap. 19: Oraciones Afirmativas con は y です',
+        desc: 'Estructura básica A は B です para presentarte e identificar personas o cosas.',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'A は B です (A es B)',
+            body: 'La partícula <span class="pt-tag">は</span> (escrita *ha*, pronunciada **wa**) indica el tema de la oración. Al final colocamos la cópula cortés <span class="pt-tag">です</span> (*desu*), que equivale a "ser/estar".',
+            formula: '[Tema] + <span class="pt-tag">は</span> + [Sustantivo] + <span class="pt-tag">です</span>',
+            examples: [
+              { jp: '<ruby>私<rt>わたし</rt></ruby>は<ruby>学生<rt>がくせい</rt></ruby>です。', tokens: ['私', 'は', '学生', 'です'], romaji: 'Watashi wa gakusei desu.', es: 'Yo soy estudiante.', audio: 'わたしはがくせいです' },
+              { jp: 'ディエゴさんはメキシコ<ruby>人<rt>じん</rt></ruby>です。', tokens: ['は', 'です'], romaji: 'Diego-san wa Mekishiko-jin desu.', es: 'Diego es mexicano.', audio: 'ディエゴさんはメキシコじんです' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'fill',
+            prompt: 'Completa con la partícula de tema: **"Yo soy estudiante"**',
+            jpSentence: '<ruby>私<rt>わたし</rt></ruby> [ ___ ] <ruby>学生<rt>がくせい</rt></ruby>です。',
+            options: ['は', 'を', 'に', 'の'],
+            correct: 'は',
+            audio: 'わたしはがくせいです',
+            explanation: 'は (wa) marca el tema de la oración.'
+          },
+          {
+            type: 'blocks',
+            prompt: 'Ordena: **"Yo soy japonés"**',
+            audioHint: 'わたしはにほんじんです',
+            answer: ['<ruby>私<rt>わたし</rt></ruby>', 'は', '<ruby>日本人<rt>にほんじん</rt></ruby>', 'です'],
+            pool: ['です', '<ruby>日本人<rt>にほんじん</rt></ruby>', '<ruby>私<rt>わたし</rt></ruby>', 'は'],
+            explanation: '私は日本人です (Watashi wa nihonjin desu).'
+          },
+          {
+            type: 'input',
+            prompt: 'Escribe en kana o romaji la palabra que va al final para decir **"Soy / Es"** de forma cortés:',
+            jpDisplay: '<ruby>私<rt>わたし</rt></ruby>は<ruby>先生<rt>せんせい</rt></ruby> [ ___ ]。',
+            accepted: ['です', 'desu'],
+            audio: 'わたしはせんせいです',
+            explanation: 'です (desu) cierra la oración afirmativa cortés.'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-20',
+        title: 'Cap. 20: Negación con じゃありません / ではありません',
+        desc: 'Cómo negar sustantivos en presente cortés ("No soy / No es").',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'A は B じゃありません (A no es B)',
+            body: 'Para negar una oración con sustantivo, reemplazamos **です** por <span class="pt-tag">じゃありません</span> (o su variante más formal **ではありません**).',
+            formula: '[Tema] + <span class="pt-tag">は</span> + [Sustantivo] + <span class="pt-tag">じゃありません</span>',
+            examples: [
+              { jp: '<ruby>私<rt>わたし</rt></ruby>は<ruby>先生<rt>せんせい</rt></ruby>じゃありません。', tokens: ['私', 'は', '先生', 'じゃありません'], romaji: 'Watashi wa sensei ja arimasen.', es: 'Yo no soy profesor.', audio: 'わたしはせんせいじゃありません' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'fill',
+            prompt: 'Niega la oración: **"Yo no soy profesor"**',
+            jpSentence: '<ruby>私<rt>わたし</rt></ruby>は<ruby>先生<rt>せんせい</rt></ruby> [ ___ ]。',
+            options: ['じゃありません', 'です', 'ます', 'じゃないか'],
+            correct: 'じゃありません',
+            audio: 'わたしはせんせいじゃありません',
+            explanation: 'じゃありません niega un sustantivo de manera cortés.'
+          },
+          {
+            type: 'blocks',
+            prompt: 'Ordena: **"Esto no es agua"**',
+            audioHint: 'これはみずじゃありません',
+            answer: ['これ', 'は', '<ruby>水<rt>みず</rt></ruby>', 'じゃありません'],
+            pool: ['じゃありません', 'これ', '<ruby>水<rt>みず</rt></ruby>', 'は'],
+            explanation: 'これは水じゃありません (Kore wa mizu ja arimasen).'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-21',
+        title: 'Cap. 21: Preguntas con か y Palabras Interrogativas',
+        desc: 'Formular preguntas con か, 何 (qué), 誰 (quién) y どこ (dónde).',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'La partícula final か (ka) y 何 (nan/nani)',
+            body: 'Añadir <span class="pt-tag">か</span> al final convierte cualquier oración en pregunta. Para preguntar "¿Qué es?", usamos **<ruby>何<rt>なん</rt></ruby>ですか**.',
+            formula: 'これは <span class="pt-tag"><ruby>何<rt>なん</rt></ruby></span> ですか？ (¿Qué es esto?)',
+            examples: [
+              { jp: 'これは<ruby>何<rt>なん</rt></ruby>ですか。', tokens: ['これ', 'は', 'です', 'か'], romaji: 'Kore wa nan desu ka?', es: '¿Qué es esto?', audio: 'これはなんですか' },
+              { jp: 'トイレはどこですか。', tokens: ['は', 'です', 'か'], romaji: 'Toire wa doko desu ka?', es: '¿Dónde está el baño?', audio: 'トイレはどこですか' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'blocks',
+            prompt: 'Ordena para preguntar: **"¿Qué es esto?"**',
+            audioHint: 'これはなんですか',
+            answer: ['これ', 'は', '<ruby>何<rt>なん</rt></ruby>', 'ですか'],
+            pool: ['ですか', '<ruby>何<rt>なん</rt></ruby>', 'これ', 'は'],
+            explanation: 'これは何ですか (Kore wa nan desu ka).'
+          },
+          {
+            type: 'fill',
+            prompt: 'Pregunta: **"¿Dónde está el baño?"**',
+            jpSentence: 'トイレは [ ___ ] ですか。',
+            options: ['どこ', 'だれ', 'いつ', 'なに'],
+            correct: 'どこ',
+            audio: 'トイレはどこですか',
+            explanation: 'どこ (doko) significa "¿Dónde?".'
+          },
+          {
+            type: 'input',
+            prompt: 'Escribe en hiragana o romaji cómo se dice **"¿Dónde?"**:',
+            jpDisplay: '<ruby>駅<rt>えき</rt></ruby>は [ ¿Dónde? ] ですか。',
+            accepted: ['どこ', 'doko'],
+            audio: 'えきはどこですか',
+            explanation: 'どこ (doko) = dónde.'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-22',
+        title: 'Cap. 22: Demostrativos これ・それ・あれ y この・その・あの',
+        desc: 'Diferencia entre pronombres independientes (これ) y modificadores de sustantivo (この + Sustantivo).',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'これ (Esto) vs この (Este + Sustantivo)',
+            body: '**これ / それ / あれ** van solos antes de は (*Esto es...*). En cambio, **この / その / あの** deben ir obligatoriamente seguidos de un sustantivo (*Este libro es...* = **この<ruby>本<rt>ほん</rt></ruby>は...**).',
+            formula: '<span class="pt-tag">これ</span>は<ruby>本<rt>ほん</rt></ruby>です vs <span class="pt-tag">この</span><ruby>本<rt>ほん</rt></ruby>は<ruby>高<rt>たか</rt></ruby>いです',
+            examples: [
+              { jp: 'これはカメラです。', tokens: ['これ', 'は', 'カメラ', 'です'], romaji: 'Kore wa kamera desu.', es: 'Esto es una cámara.', audio: 'これはカメラです' },
+              { jp: 'このカメラは<ruby>高<rt>たか</rt></ruby>いです。', tokens: ['カメラ', 'は', '高い', 'です'], romaji: 'Kono kamera wa takai desu.', es: 'Esta cámara es cara.', audio: 'このカメラはたかいです' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'fill',
+            prompt: 'Completa: **"Esta cámara es cara"** (acompañando al sustantivo カメラ):',
+            jpSentence: '[ ___ ] カメラは<ruby>高<rt>たか</rt></ruby>いです。',
+            options: ['この', 'これ', 'ここ', 'どれ'],
+            correct: 'この',
+            audio: 'このカメラはたかいです',
+            explanation: 'Antes de un sustantivo siempre usamos この / その / あの (nunca これ).'
+          },
+          {
+            type: 'blocks',
+            prompt: 'Ordena: **"Este libro es mío (de mí)"**',
+            audioHint: 'このほんはわたしのです',
+            answer: ['この', '<ruby>本<rt>ほん</rt></ruby>', 'は', '<ruby>私<rt>わたし</rt></ruby>のです'],
+            pool: ['<ruby>私<rt>わたし</rt></ruby>のです', 'この', '<ruby>本<rt>ほん</rt></ruby>', 'は'],
+            explanation: 'この本は私のです (Kono hon wa watashi no desu).'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-23',
+        title: 'Cap. 23: Partículas de Conexión: の (Posesión), も (También) y と (Y)',
+        desc: 'Unir sustantivos, expresar pertenencia y decir "Yo también".',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'の (de), も (también) y と (y)',
+            body: '1) <span class="pt-tag">の</span> conecta dos sustantivos (**<ruby>私<rt>わたし</rt></ruby>のカメラ** = mi cámara). 2) <span class="pt-tag">も</span> reemplaza a は para decir "también" (**<ruby>私<rt>わたし</rt></ruby>も** = yo también). 3) <span class="pt-tag">と</span> une sustantivos ("A y B").',
+            formula: 'A <span class="pt-tag">と</span> B (A y B) • <ruby>私<rt>わたし</rt></ruby><span class="pt-tag">も</span> (Yo también)',
+            examples: [
+              { jp: '<ruby>私<rt>わたし</rt></ruby>も<ruby>学生<rt>がくせい</rt></ruby>です。', tokens: ['私', '学生', 'です'], romaji: 'Watashi mo gakusei desu.', es: 'Yo también soy estudiante.', audio: 'わたしもがくせいです' },
+              { jp: '<ruby>寿司<rt>すし</rt></ruby>とラーメン', tokens: ['寿司', 'ラーメン'], romaji: 'Sushi to raamen', es: 'Sushi y ramen', audio: 'すしとラーメン' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'fill',
+            prompt: 'Completa para decir: **"Yo también soy estudiante"**',
+            jpSentence: '<ruby>私<rt>わたし</rt></ruby> [ ___ ] <ruby>学生<rt>がくせい</rt></ruby>です。',
+            options: ['も', 'と', 'の', 'を'],
+            correct: 'も',
+            audio: 'わたしもがくせいです',
+            explanation: 'La partícula も (mo) significa "también" y ocupa el lugar de は.'
+          },
+          {
+            type: 'blocks',
+            prompt: 'Ordena: **"Café y agua"**',
+            audioHint: 'コーヒーとみず',
+            answer: ['コーヒー', 'と', '<ruby>水<rt>みず</rt></ruby>'],
+            pool: ['<ruby>水<rt>みず</rt></ruby>', 'と', 'コーヒー', 'の'],
+            explanation: 'と (to) une dos sustantivos equivaliendo a "y".'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-24',
+        title: 'Cap. 24: Verbos en Forma ~ます y Objeto Directo con を',
+        desc: 'Conjugar verbos en presente/futuro cortés y marcar qué comes, bebes o ves.',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: '[Objeto] + を + [Verbo ~ます]',
+            body: 'La partícula <span class="pt-tag">を</span> marca el objeto directo que recibe la acción del verbo. En japonés la forma **~ます** sirve tanto para el presente habitual como para el futuro inmediato.',
+            formula: '<ruby>寿司<rt>すし</rt></ruby> <span class="pt-tag">を</span> <ruby>食<rt>た</rt></ruby>べます (Como / Comeré sushi)',
+            examples: [
+              { jp: '<ruby>毎朝<rt>まいあさ</rt></ruby>コーヒーを<ruby>飲<rt>の</rt></ruby>みます。', tokens: ['コーヒー', 'を', '飲みます'], romaji: 'Maiasa koohii o nomimasu.', es: 'Cada mañana bebo café.', audio: 'まいあさコーヒーをのみます' },
+              { jp: '<ruby>日本語<rt>にほんご</rt></ruby>を<ruby>勉強<rt>べんきょう</rt></ruby>します。', tokens: ['を'], romaji: 'Nihongo o benkyou shimasu.', es: 'Estudio japonés.', audio: 'にほんごをべんきょうします' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'fill',
+            prompt: 'Completa: **"Bebo agua"**',
+            jpSentence: '<ruby>水<rt>みず</rt></ruby> [ ___ ] <ruby>飲<rt>の</rt></ruby>みます。',
+            options: ['を', 'に', 'で', 'へ'],
+            correct: 'を',
+            audio: 'みずをのみます',
+            explanation: 'を marca el objeto directo del verbo 飲みます (beber).'
+          },
+          {
+            type: 'blocks',
+            prompt: 'Ordena: **"Como sushi"**',
+            audioHint: 'すしをたべます',
+            answer: ['<ruby>寿司<rt>すし</rt></ruby>', 'を', '<ruby>食<rt>た</rt></ruby>べます'],
+            pool: ['<ruby>食<rt>た</rt></ruby>べます', '<ruby>寿司<rt>すし</rt></ruby>', 'を', 'に'],
+            explanation: '寿司を食べます (Sushi o tabemasu).'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-25',
+        title: 'Cap. 25: Los 4 Tiempos Verbales (~ます / ~ません / ~ました / ~ませんでした)',
+        desc: 'Domina el presente, negativo, pasado y pasado negativo de cualquier verbo en japonés.',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'Tabla Maestra de Conjugación Cortés (~ます)',
+            body: 'Todos los verbos en japonés siguen exactamente estas 4 terminaciones en su forma cortés, sin importar el sujeto:',
+            formula: 'Afirm: <span class="pt-tag">~ます</span> • Neg: <span class="pt-tag">~ません</span> • Pasado: <span class="pt-tag">~ました</span> • Pasado Neg: <span class="pt-tag">~ませんでした</span>',
+            examples: [
+              { jp: '<ruby>昨日<rt>きのう</rt></ruby>、ラーメンを<ruby>食<rt>た</rt></ruby>べました。', tokens: ['ラーメン', 'を'], romaji: 'Kinou, raamen o tabemashita.', es: 'Ayer comí ramen.', audio: 'きのうラーメンをたべました' },
+              { jp: '<ruby>明日<rt>あした</rt></ruby>は<ruby>働<rt>はたら</rt></ruby>きません。', tokens: ['は'], romaji: 'Ashita wa hatarakimasen.', es: 'Mañana no trabajaré.', audio: 'あしたははたらきません' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'fill',
+            prompt: 'Elige la terminación correcta para el **pasado afirmativo**: **"Ayer comí sushi"**',
+            jpSentence: '<ruby>昨日<rt>きのう</rt></ruby>、<ruby>寿司<rt>すし</rt></ruby>を [ ___ ]。',
+            options: ['食べました', '食べます', '食べません', '食べて'],
+            correct: '食べました',
+            audio: 'きのうすしをたべました',
+            explanation: '~ました (-mashita) indica tiempo pasado afirmativo.'
+          },
+          {
+            type: 'blocks',
+            prompt: 'Ordena: **"No bebo café"** (presente negativo):',
+            audioHint: 'コーヒーをのみません',
+            answer: ['コーヒー', 'を', '<ruby>飲<rt>の</rt></ruby>みません'],
+            pool: ['<ruby>飲<rt>の</rt></ruby>みません', 'コーヒー', 'を', 'ました'],
+            explanation: '飲みません (nomimasen) es el negativo de 飲みます.'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-26',
+        title: 'Cap. 26: Partículas de Destino (に / へ) y Transporte (で)',
+        desc: 'Indicar hacia dónde vas (行きます / 来ます / 帰ります) y en qué medio viajas.',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'Destino con に / へ y Medio con で',
+            body: 'Con verbos de desplazamiento (**<ruby>行<rt>い</rt></ruby>きます** ir, **<ruby>来<rt>き</rt></ruby>ます** venir, **<ruby>帰<rt>かえ</rt></ruby>ります** regresar a casa), el destino lleva <span class="pt-tag">に</span> o <span class="pt-tag">へ</span> (pronunciado *e*), y el vehículo lleva <span class="pt-tag">で</span>.',
+            formula: '[Vehículo] + <span class="pt-tag">で</span> + [Lugar] + <span class="pt-tag">に</span> + <ruby>行<rt>い</rt></ruby>きます',
+            examples: [
+              { jp: '<ruby>電車<rt>でんしゃ</rt></ruby>で<ruby>東京<rt>とうきょう</rt></ruby>に<ruby>行<rt>い</rt></ruby>きます。', tokens: ['電車', 'で', '東京', 'に', '行きます'], romaji: 'Densha de Toukyou ni ikimasu.', es: 'Voy a Tokio en tren.', audio: 'でんしゃでとうきょうにいきます' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'fill',
+            prompt: 'Elige la partícula para el **medio de transporte**: **"Voy en metro"**',
+            jpSentence: '<ruby>地下鉄<rt>ちかてつ</rt></ruby> [ ___ ] <ruby>行<rt>い</rt></ruby>きます。',
+            options: ['で', 'に', 'を', 'は'],
+            correct: 'で',
+            audio: 'ちかてつでいきます',
+            explanation: 'で marca el medio de transporte o herramienta.'
+          },
+          {
+            type: 'blocks',
+            prompt: 'Ordena: **"Fui a Kioto"**',
+            audioHint: 'きょうとにいきました',
+            answer: ['<ruby>京都<rt>きょうと</rt></ruby>', 'に', '<ruby>行<rt>い</rt></ruby>きました'],
+            pool: ['<ruby>行<rt>い</rt></ruby>きました', '<ruby>京都<rt>きょうと</rt></ruby>', 'に', 'で'],
+            explanation: '京都に行きました (Kyouto ni ikimashita).'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-27',
+        title: 'Cap. 27: Lugar de Acción (で) y Tiempo Específico (に)',
+        desc: 'Dónde ocurre una actividad (レストランで) y a qué hora sucede (七時に).',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'Lugar de acción (で) y Hora exacta (に)',
+            body: 'Cuando realizas una acción activa dentro de un lugar (comer, comprar, trabajar, estudiar), ese lugar lleva <span class="pt-tag">で</span>. Las horas y días específicos llevan <span class="pt-tag">に</span> (**<ruby>七時<rt>しちじ</rt></ruby>に** = a las 7:00).',
+            formula: '[Lugar] + <span class="pt-tag">で</span> + [Hora] + <span class="pt-tag">に</span> + [Acción]',
+            examples: [
+              { jp: 'レストランで<ruby>昼<rt>ひる</rt></ruby>ごはんを<ruby>食<rt>た</rt></ruby>べます。', tokens: ['レストラン', 'で', 'を', '食べます'], romaji: 'Resutoran de hirugohan o tabemasu.', es: 'Como el almuerzo en el restaurante.', audio: 'レストランでひるごはんをたべます' },
+              { jp: '<ruby>七時<rt>しちじ</rt></ruby>に<ruby>起<rt>お</rt></ruby>きます。', tokens: ['に'], romaji: 'Shichiji ni okimasu.', es: 'Me levanto a las 7 en punto.', audio: 'しちじにおきます' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'fill',
+            prompt: 'Elige la partícula que indica **dónde ocurre la acción**: **"Compro agua en el konbini"**',
+            jpSentence: 'コンビニ [ ___ ] <ruby>水<rt>みず</rt></ruby>を<ruby>買<rt>か</rt></ruby>います。',
+            options: ['で', 'に', 'へ', 'を'],
+            correct: 'で',
+            audio: 'コンビニでみずをかいます',
+            explanation: 'Como comprar (買います) es una acción activa realizada en el lugar, usamos で.'
+          },
+          {
+            type: 'fill',
+            prompt: 'Elige la partícula para indicar la **hora exacta**: **"A las 8:00"**',
+            jpSentence: '<ruby>八時<rt>はちじ</rt></ruby> [ ___ ] <ruby>行<rt>い</rt></ruby>きます。',
+            options: ['に', 'で', 'を', 'の'],
+            correct: 'に',
+            audio: 'はちじにいきます',
+            explanation: 'Las horas numéricas siempre llevan la partícula に.'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-28',
+        title: 'Cap. 28: Desde (から) y Hasta (まで) / Compañía (と)',
+        desc: 'Indicar rangos de horario o distancia (から〜まで) y con quién haces algo (友達と).',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'A から B まで (Desde A hasta B) y Persona + と (Con)',
+            body: '<span class="pt-tag">から</span> significa "desde" (punto inicial en tiempo o espacio) y <span class="pt-tag">まで</span> significa "hasta". Además, <span class="pt-tag">と</span> después de una persona significa **"con"** (**<ruby>友達<rt>ともだち</rt></ruby>と** = con mi amigo).',
+            formula: '<ruby>九時<rt>くじ</rt></ruby><span class="pt-tag">から</span><ruby>五時<rt>ごじ</rt></ruby><span class="pt-tag">まで</span> (De 9:00 a 5:00)',
+            examples: [
+              { jp: '<ruby>東京<rt>とうきょう</rt></ruby>から<ruby>京都<rt>きょうと</rt></ruby>まで<ruby>行<rt>い</rt></ruby>きます。', tokens: ['東京', '京都', '行きます'], romaji: 'Toukyou kara Kyouto made ikimasu.', es: 'Voy desde Tokio hasta Kioto.', audio: 'とうきょうからきょうとまでいきます' },
+              { jp: '<ruby>友達<rt>ともだち</rt></ruby>と<ruby>日本<rt>にほん</rt></ruby>に<ruby>行<rt>い</rt></ruby>きます。', tokens: ['日本', 'に', '行きます'], romaji: 'Tomodachi to Nihon ni ikimasu.', es: 'Voy a Japón con mi amigo.', audio: 'ともだちとにほんにいきます' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'blocks',
+            prompt: 'Ordena: **"Desde Tokio hasta Kioto"**',
+            audioHint: 'とうきょうからきょうとまで',
+            answer: ['<ruby>東京<rt>とうきょう</rt></ruby>', 'から', '<ruby>京都<rt>きょうと</rt></ruby>', 'まで'],
+            pool: ['まで', '<ruby>京都<rt>きょうと</rt></ruby>', 'から', '<ruby>東京<rt>とうきょう</rt></ruby>'],
+            explanation: 'から = desde, まで = hasta.'
+          },
+          {
+            type: 'fill',
+            prompt: 'Completa: **"Voy con mi amigo"**',
+            jpSentence: '<ruby>友達<rt>ともだち</rt></ruby> [ ___ ] <ruby>行<rt>い</rt></ruby>きます。',
+            options: ['と', 'で', 'を', 'か'],
+            correct: 'と',
+            audio: 'ともだちといきます',
+            explanation: 'Persona + と indica en compañía de quién realizas la acción.'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-29',
+        title: 'Cap. 29: Adjetivos -i (Presente, Negativo y Pasado)',
+        desc: 'Conjugar adjetivos terminados en い: ~くないです (negativo) y ~かったです (pasado).',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'Conjugación de Adjetivos -i (高い・美味しい・楽しい)',
+            body: 'Los adjetivos **-i** cambian su propia vocal final **い** para conjugarse: \n• **Negativo:** quita い + <span class="pt-tag">くないです</span> (**<ruby>高<rt>たか</rt></ruby>くないです** = no es caro).\n• **Pasado:** quita い + <span class="pt-tag">かったです</span> (**<ruby>美味<rt>おい</rt></ruby>しかったです** = estuvo delicioso).',
+            formula: '<ruby>美味<rt>おい</rt></ruby>し<s>い</s> ＋ <span class="pt-tag">かったです</span> ＝ Estuvo delicioso',
+            examples: [
+              { jp: 'ラーメンは<ruby>美味<rt>おい</rt></ruby>しかったです。', tokens: ['ラーメン', 'は'], romaji: 'Raamen wa oishikatta desu.', es: 'El ramen estuvo delicioso.', audio: 'ラーメンはおいしかったです' },
+              { jp: 'このホテルは<ruby>高<rt>たか</rt></ruby>くないです。', tokens: ['は', '高くないです'], romaji: 'Kono hoteru wa takakunai desu.', es: 'Este hotel no es caro.', audio: 'このホテルはたかくないです' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'fill',
+            prompt: 'Conjuga <ruby>美味<rt>おい</rt></ruby>しい (delicioso) en **pasado**: **"Estuvo delicioso"**',
+            jpSentence: '<ruby>寿司<rt>すし</rt></ruby>は [ ___ ] です。',
+            options: ['美味しかった', '美味しいでした', '美味しくない', '美味し'],
+            correct: '美味しかった',
+            audio: 'すしはおいしかったです',
+            explanation: 'En adjetivos -i el pasado se hace cambiando la い final por かった (oishikatta desu).'
+          },
+          {
+            type: 'fill',
+            prompt: 'Conjuga <ruby>高<rt>たか</rt></ruby>い (caro) en **negativo**: **"No es caro"**',
+            jpSentence: 'あまり [ ___ ] です。',
+            options: ['高くない', '高いじゃない', '高くなかった', '高います'],
+            correct: '高くない',
+            audio: 'あまりたかくないです',
+            explanation: 'Quitamos い y agregamos くない (takakunai desu).'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-30',
+        title: 'Cap. 30: Adjetivos -na (静か・きれい・有名) y Partícula が',
+        desc: 'Cómo usar adjetivos -na antes de un sustantivo y expresar gustos con 好きです.',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'Adjetivos -na y Gustos con が 好きです',
+            body: '1) Los **adjetivos -na** (como **<ruby>静<rt>しず</rt></ruby>か** tranquilo, **<ruby>有名<rt>ゆうめい</rt></ruby>** famoso, **きれい** bonito/limpio) se conjugan igual que los sustantivos, pero cuando van **antes de un sustantivo** conservan su <span class="pt-tag">な</span> (**<ruby>静<rt>しず</rt></ruby>かな<ruby>町<rt>まち</rt></ruby>** = ciudad tranquila).\n2) Para decir "Me gusta X", usamos <span class="pt-tag">が</span> **<ruby>好<rt>す</rt></ruby>きです**.',
+            formula: '[Cosa] + <span class="pt-tag">が</span> + <ruby>好<rt>す</rt></ruby>きです (Me gusta [Cosa])',
+            examples: [
+              { jp: '<ruby>日本<rt>にほん</rt></ruby>の<ruby>料理<rt>りょうり</rt></ruby>が<ruby>好<rt>す</rt></ruby>きです。', tokens: ['日本', 'の', 'です'], romaji: 'Nihon no ryouri ga suki desu.', es: 'Me gusta la comida japonesa.', audio: 'にほんのりょうりがすきです' },
+              { jp: '<ruby>京都<rt>きょうと</rt></ruby>はきれいな<ruby>町<rt>まち</rt></ruby>です。', tokens: ['京都', 'は', 'です'], romaji: 'Kyouto wa kirei na machi desu.', es: 'Kioto es una ciudad hermosa.', audio: 'きょうとはきれいなまちです' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'fill',
+            prompt: 'Elige la partícula que acompaña a <ruby>好<rt>す</rt></ruby>きです: **"Me gusta el sushi"**',
+            jpSentence: '<ruby>寿司<rt>すし</rt></ruby> [ ___ ] <ruby>好<rt>す</rt></ruby>きです。',
+            options: ['が', 'を', 'に', 'で'],
+            correct: 'が',
+            audio: 'すしがすきです',
+            explanation: 'Con adjetivos de gusto o habilidad (好き / 上手 / 分かります) siempre usamos が, nunca を.'
+          },
+          {
+            type: 'blocks',
+            prompt: 'Ordena usando el adjetivo -na antes del sustantivo: **"Ciudad tranquila"**',
+            audioHint: 'しずかなまち',
+            answer: ['<ruby>静<rt>しず</rt></ruby>か', 'な', '<ruby>町<rt>まち</rt></ruby>'],
+            pool: ['<ruby>町<rt>まち</rt></ruby>', 'な', '<ruby>静<rt>しず</rt></ruby>か', 'の'],
+            explanation: 'Los adjetivos -na agregan な cuando modifican directamente a un sustantivo.'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-31',
+        title: 'Cap. 31: Existencia あります vs います y Posiciones',
+        desc: 'Decir "Hay / Está" para objetos inanimados (あります) y seres vivos (います).',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'あります (Inanimados) vs います (Personas y Animales)',
+            body: 'En japonés "haber/estar" se divide en dos verbos: <span class="pt-tag">あります</span> para cosas inanimadas (tiendas, objetos, plantas) e <span class="pt-tag">います</span> para seres vivos que se mueven por voluntad propia (personas, perros, gatos).',
+            formula: '[Lugar] に [Objeto] が <span class="pt-tag">あります</span> / [Ser vivo] が <span class="pt-tag">います</span>',
+            examples: [
+              { jp: 'ここにコンビニがあります。', tokens: ['コンビニ', 'あります'], romaji: 'Koko ni konbini ga arimasu.', es: 'Aquí hay una tienda de conveniencia.', audio: 'ここにコンビニがあります' },
+              { jp: 'あそこに<ruby>猫<rt>ねこ</rt></ruby>がいます。', tokens: ['います'], romaji: 'Asoko ni neko ga imasu.', es: 'Allá hay un gato.', audio: 'あそこにねこがいます' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'fill',
+            prompt: 'Completa para un ser vivo: **"Hay un perro"**',
+            jpSentence: '<ruby>犬<rt>いぬ</rt></ruby>が [ ___ ]。',
+            options: ['います', 'あります', 'します', 'きます'],
+            correct: 'います',
+            audio: 'いぬがいます',
+            explanation: 'Como el perro (犬) es un ser vivo animado, usamos います.'
+          },
+          {
+            type: 'fill',
+            prompt: 'Completa para un objeto/lugar inanimado: **"¿Dónde hay un cajero/banco?"**',
+            jpSentence: '<ruby>銀行<rt>ぎんこう</rt></ruby>はどこに [ ___ ] か。',
+            options: ['あります', 'います', 'いきます', 'たべます'],
+            correct: 'あります',
+            audio: 'ぎんこうはどこにありますか',
+            explanation: 'Para edificios y objetos siempre se usa あります.'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-32',
+        title: 'Cap. 32: Contadores Japoneses (一つ・二つ y 人)',
+        desc: 'Contar unidades universales (ひとつ, ふたつ, みっつ) y contar personas (ひとり, ふたり).',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'Contadores Universales (~つ) y Personas (~人)',
+            body: 'Al pedir en un restaurante, los contadores nativos sirven para casi cualquier objeto: **<ruby>一<rt>ひと</rt></ruby>つ** (1 unidad), **<ruby>二<rt>ふた</rt></ruby>つ** (2 unidades), **<ruby>三<rt>みっ</rt></ruby>つ** (3 unidades). Para personas: **<ruby>一人<rt>ひとり</rt></ruby>** (1 persona), **<ruby>二人<rt>ふたり</rt></ruby>** (2 personas), **<ruby>三人<rt>さんにん</rt></ruby>** (3 personas).',
+            formula: 'ラーメンを <span class="pt-tag"><ruby>二<rt>ふた</rt></ruby>つ</span> ください (Dos ramen, por favor)',
+            examples: [
+              { jp: 'コーヒーを<ruby>二<rt>ふた</rt></ruby>つください。', tokens: ['コーヒー', 'を', 'ください'], romaji: 'Koohii o futatsu kudasai.', es: 'Dos cafés, por favor.', audio: 'コーヒーをふたつください' },
+              { jp: '<ruby>二人<rt>ふたり</rt></ruby>です。', tokens: ['です'], romaji: 'Futari desu.', es: 'Somos dos personas (al entrar a un restaurante).', audio: 'ふたりです' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'blocks',
+            prompt: 'Pide en un restaurante: **"Dos ramen, por favor"**',
+            audioHint: 'ラーメンをふたつください',
+            answer: ['ラーメン', 'を', '<ruby>二<rt>ふた</rt></ruby>つ', 'ください'],
+            pool: ['ください', '<ruby>二<rt>ふた</rt></ruby>つ', 'ラーメン', 'を'],
+            explanation: 'ふたつ (futatsu) significa "dos unidades".'
+          },
+          {
+            type: 'fill',
+            prompt: 'El mesero pregunta cuántos son. Responde: **"Somos dos personas"**',
+            jpSentence: '[ ___ ] です。',
+            options: ['ふたり', 'ににん', 'ふたつ', 'ひとり'],
+            correct: 'ふたり',
+            audio: 'ふたりです',
+            explanation: 'Dos personas es irregular y se lee ふたり (futari).'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-33',
+        title: 'Cap. 33: Expresar Deseos: ~たいです y が ほしいです',
+        desc: 'Decir qué acción quieres realizar (~たい) y qué objeto quieres tener (がほしい).',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'Querer Hacer (~たいです) vs Querer un Objeto (が ほしいです)',
+            body: '1) Para decir **"Quiero [verbo]"**, quita **ます** al verbo y añade <span class="pt-tag">たいです</span> (**<ruby>行<rt>い</rt></ruby>きたいです** = quiero ir, **<ruby>食<rt>た</rt></ruby>べたいです** = quiero comer).\n2) Para decir **"Quiero un [objeto]"**, usa **[Objeto] + <span class="pt-tag">が ほしいです</span>**.',
+            formula: '<ruby>日本<rt>にほん</rt></ruby>に<ruby>行<rt>い</rt></ruby>き<span class="pt-tag">たいです</span> • カメラ<span class="pt-tag">がほしいです</span>',
+            examples: [
+              { jp: '<ruby>寿司<rt>すし</rt></ruby>を<ruby>食<rt>た</rt></ruby>べたいです。', tokens: ['寿司', 'を', 'です'], romaji: 'Sushi o tabetai desu.', es: 'Quiero comer sushi.', audio: 'すしをたべたいです' },
+              { jp: '<ruby>新<rt>あたら</rt></ruby>しいカメラがほしいです。', tokens: ['カメラ', 'です'], romaji: 'Atarashii kamera ga hoshii desu.', es: 'Quiero una cámara nueva.', audio: 'あたらしいカメラがほしいです' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'fill',
+            prompt: 'Conjuga <ruby>買<rt>か</rt></ruby>います (comprar) para decir: **"Quiero comprar"**',
+            jpSentence: 'カメラを [ ___ ] です。',
+            options: ['買いたい', '買いますたい', '買って', '買わない'],
+            correct: '買いたい',
+            audio: 'カメラをかいたいです',
+            explanation: '買い (raíz de kaimasu) + たい = 買いたい (kaitai).'
+          },
+          {
+            type: 'blocks',
+            prompt: 'Ordena: **"Quiero ir a Japón"**',
+            audioHint: 'にほんにいきたいです',
+            answer: ['<ruby>日本<rt>にほん</rt></ruby>', 'に', '<ruby>行<rt>い</rt></ruby>きたい', 'です'],
+            pool: ['です', '<ruby>行<rt>い</rt></ruby>きたい', '<ruby>日本<rt>にほん</rt></ruby>', 'に'],
+            explanation: '日本に行きたいです (Nihon ni ikitai desu).'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-34',
+        title: 'Cap. 34: La Forma -TE y Peticiones con ~てください',
+        desc: 'Cómo construir la Forma -TE y pedir favores o dar instrucciones amables.',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'Construcción de la Forma -TE y ~てください',
+            body: 'La **Forma -TE** es una de las bases más importantes del japonés. Si añades <span class="pt-tag">ください</span> después de un verbo en forma -TE, significa **"Por favor haz [verbo]"**.',
+            formula: '<ruby>見<rt>み</rt></ruby>て<span class="pt-tag">ください</span> (Mira por favor) • <ruby>待<rt>ま</rt></ruby>って<span class="pt-tag">ください</span> (Espera por favor)',
+            examples: [
+              { jp: 'ちょっと<ruby>待<rt>ま</rt></ruby>ってください。', tokens: ['ください'], romaji: 'Chotto matte kudasai.', es: 'Espera un momento, por favor.', audio: 'ちょっとまってください' },
+              { jp: '<ruby>写真<rt>しゃしん</rt></ruby>を<ruby>撮<rt>と</rt></ruby>ってください。', tokens: ['を', 'ください'], romaji: 'Shashin o totte kudasai.', es: 'Por favor toma una foto.', audio: 'しゃしんをとってください' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'blocks',
+            prompt: 'Ordena para decir: **"Espera un momento, por favor"**',
+            audioHint: 'ちょっとまってください',
+            answer: ['ちょっと', '<ruby>待<rt>ま</rt></ruby>って', 'ください'],
+            pool: ['ください', '<ruby>待<rt>ま</rt></ruby>って', 'ちょっと', 'ます'],
+            explanation: '待って (matte) es la forma -TE de 待ちます (esperar).'
+          },
+          {
+            type: 'fill',
+            prompt: 'Completa: **"Por favor mira esto"**',
+            jpSentence: 'これを [ ___ ] ください。',
+            options: ['見て', '見ます', '見た', '見ない'],
+            correct: '見て',
+            audio: 'これをみてください',
+            explanation: 'Antes de ください el verbo siempre va en forma -TE (見て).'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-35',
+        title: 'Cap. 35: Presente Progresivo (~ています) y Permiso (~てもいいですか)',
+        desc: 'Acciones en curso ("Estoy haciendo") y pedir permiso ("¿Puedo tomar una foto?").',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: '~ています (Estar haciendo) y ~てもいいですか (¿Puedo...?)',
+            body: '1) **[Verbo -TE] + <span class="pt-tag">います</span>** expresa una acción continua o estado actual (*Estoy comiendo* / *Vivo en...*).\n2) **[Verbo -TE] + <span class="pt-tag">もいいですか</span>** pide permiso cortésmente (*¿Está bien si hago X?*).',
+            formula: '<ruby>写真<rt>しゃしん</rt></ruby>を<ruby>撮<rt>と</rt></ruby>っ<span class="pt-tag">てもいいですか</span> (¿Puedo tomar una foto?)',
+            examples: [
+              { jp: '<ruby>今<rt>いま</rt></ruby>、<ruby>日本語<rt>にほんご</rt></ruby>を<ruby>勉強<rt>べんきょう</rt></ruby>しています。', tokens: ['を'], romaji: 'Ima, nihongo o benkyou shite imasu.', es: 'Ahora estoy estudiando japonés.', audio: 'いまにほんごをべんきょうしています' },
+              { jp: 'ここで<ruby>写真<rt>しゃしん</rt></ruby>を<ruby>撮<rt>と</rt></ruby>ってもいいですか。', tokens: ['で', 'を', 'か'], romaji: 'Koko de shashin o totte mo ii desu ka?', es: '¿Puedo tomar una foto aquí?', audio: 'ここでしゃしんをとってもいいですか' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'blocks',
+            prompt: 'Pregunta para pedir permiso: **"¿Puedo tomar una foto?"**',
+            audioHint: 'しゃしんをとってもいいですか',
+            answer: ['<ruby>写真<rt>しゃしん</rt></ruby>を', '<ruby>撮<rt>と</rt></ruby>っても', 'いいですか'],
+            pool: ['いいですか', '<ruby>撮<rt>と</rt></ruby>っても', '<ruby>写真<rt>しゃしん</rt></ruby>を', 'いません'],
+            explanation: '撮ってもいいですか (Totte mo ii desu ka) = ¿Puedo tomar (una foto)?'
+          },
+          {
+            type: 'fill',
+            prompt: 'Completa el presente continuo: **"Estoy comiendo ramen"**',
+            jpSentence: 'ラーメンを<ruby>食<rt>た</rt></ruby>べて [ ___ ]。',
+            options: ['います', 'あります', 'ください', 'たいです'],
+            correct: 'います',
+            audio: 'ラーメンをたべています',
+            explanation: 'Forma -TE + います indica acción en progreso.'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-36',
+        title: 'Cap. 36: Forma Diccionario y Expresar Habilidad (~ことができます)',
+        desc: 'Verbos en infinitivo/casual (食べる・行く) y decir "Puedo hacer X".',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'Forma Diccionario + ことができます (Poder hacer)',
+            body: 'La **Forma Diccionario** es el verbo en su estado base (termina siempre en sonido **-u**: **<ruby>食<rt>た</rt></ruby>べる**, **<ruby>行<rt>い</rt></ruby>く**, **<ruby>話<rt>はな</rt></ruby>す**). Si le agregas <span class="pt-tag">ことができます</span> expresas capacidad o posibilidad ("Puedo...").',
+            formula: '<ruby>日本語<rt>にほんご</rt></ruby>を<ruby>話<rt>はな</rt></ruby>す <span class="pt-tag">ことができます</span> (Puedo hablar japonés)',
+            examples: [
+              { jp: 'ひらがなを<ruby>読<rt>よ</rt></ruby>むことができます。', tokens: ['を'], romaji: 'Hiragana o yomu koto ga dekimasu.', es: 'Puedo leer Hiragana.', audio: 'ひらがなをよむことができます' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'fill',
+            prompt: 'Completa: **"Puedo leer Hiragana"**',
+            jpSentence: 'ひらがなを<ruby>読<rt>よ</rt></ruby>む [ ___ ] ができます。',
+            options: ['こと', 'もの', 'とこ', 'ひと'],
+            correct: 'こと',
+            audio: 'ひらがなをよむことができます',
+            explanation: 'こと nominaliza el verbo en forma diccionario antes de ができます.'
+          },
+          {
+            type: 'blocks',
+            prompt: 'Ordena: **"Puedo comer sushi"**',
+            audioHint: 'すしをたべることができます',
+            answer: ['<ruby>寿司<rt>すし</rt></ruby>を', '<ruby>食<rt>た</rt></ruby>べる', 'ことが', 'できます'],
+            pool: ['できます', '<ruby>食<rt>た</rt></ruby>べる', 'ことが', '<ruby>寿司<rt>すし</rt></ruby>を'],
+            explanation: '食べることができます (Taberu koto ga dekimasu).'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-37',
+        title: 'Cap. 37: Forma Negativa Casual (~ない) y ~ないでください',
+        desc: 'Pedir que NO se haga algo ("Sin cebolla, por favor" / "Por favor no olvides").',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'Peticiones Negativas con ~ないでください',
+            body: 'A partir de la **Forma -NAI** (negativo casual: **<ruby>食<rt>た</rt></ruby>べない** no comer, **<ruby>入<rt>い</rt></ruby>れない** no poner/meter), si añades <span class="pt-tag">でください</span> pides amablemente que **no** se realice una acción.',
+            formula: '[Verbo ~ない] + <span class="pt-tag">でください</span> (Por favor no hagas...)',
+            examples: [
+              { jp: 'ねぎを<ruby>入<rt>い</rt></ruby>れないでください。', tokens: ['を', 'ください'], romaji: 'Negi o irenaide kudasai.', es: 'Por favor no le ponga cebolla / cebollín.', audio: 'ねぎをいれないでください' },
+              { jp: 'パスポートを<ruby>忘<rt>わす</rt></ruby>れないでください。', tokens: ['を', 'ください'], romaji: 'Pasupooto o wasurenaide kudasai.', es: 'Por favor no olvides el pasaporte.', audio: 'パスポートをわすれないでください' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'blocks',
+            prompt: 'Pide en un restaurante: **"Por favor no le ponga cebolla (negi)"**',
+            audioHint: 'ねぎをいれないでください',
+            answer: ['ねぎを', '<ruby>入<rt>い</rt></ruby>れないで', 'ください'],
+            pool: ['ください', '<ruby>入<rt>い</rt></ruby>れないで', 'ねぎを', 'ます'],
+            explanation: '入れないでください (irenaide kudasai) = Por favor no le ponga/agregue.'
+          },
+          {
+            type: 'fill',
+            prompt: 'Completa: **"Por favor no olvides"**',
+            jpSentence: '<ruby>忘<rt>わす</rt></ruby>れ [ ___ ] ください。',
+            options: ['ないで', 'なくて', 'ませんで', 'ない'],
+            correct: 'ないで',
+            audio: 'わすれないでください',
+            explanation: 'Verbo en forma -nai + でください = Por favor no hagas.'
+          }
+        ]
+      },
+      {
+        id: 'n5-cap-38',
+        title: 'Cap. 38: Dar Razones (から), Opiniones (~と思います) y Experiencias (~たことがあります)',
+        desc: 'Conectar oraciones con "porque", expresar lo que piensas y hablar de experiencias pasadas.',
+        isKanaLesson: false,
+        theory: [
+          {
+            heading: 'Graduación JLPT N5: Razones, Opiniones y Experiencias',
+            body: '1) **[Oración] + <span class="pt-tag">から</span>:** Indica la causa ("Porque...").\n2) **[Forma Plana] + <span class="pt-tag">と<ruby>思<rt>おも</rt></ruby>います</span>:** "Creo que...".\n3) **[Verbo Pasado -TA] + <span class="pt-tag">ことがあります</span>:** "Alguna vez he hecho...".',
+            formula: '<ruby>日本<rt>にほん</rt></ruby>に<ruby>行<rt>い</rt></ruby>っ<span class="pt-tag">たことがあります</span> (He ido a Japón alguna vez)',
+            examples: [
+              { jp: '<ruby>日本<rt>にほん</rt></ruby>に<ruby>行<rt>い</rt></ruby>ったことがあります。', tokens: ['日本', 'に', 'あります'], romaji: 'Nihon ni itta koto ga arimasu.', es: 'He estado / ido a Japón (tengo la experiencia).', audio: 'にほんにいったことがあります' },
+              { jp: 'このラーメンは<ruby>美味<rt>おい</rt></ruby>しいと<ruby>思<rt>おも</rt></ruby>います。', tokens: ['ラーメン', 'は', '美味しい'], romaji: 'Kono raamen wa oishii to omoimasu.', es: 'Creo que este ramen está delicioso.', audio: 'このラーメンはおいしいとおもいます' }
+            ]
+          }
+        ],
+        questions: [
+          {
+            type: 'blocks',
+            prompt: 'Ordena para hablar de experiencia pasada: **"He ido a Japón"**',
+            audioHint: 'にほんにいったことがあります',
+            answer: ['<ruby>日本<rt>にほん</rt></ruby>に', '<ruby>行<rt>い</rt></ruby>った', 'ことが', 'あります'],
+            pool: ['あります', 'ことが', '<ruby>行<rt>い</rt></ruby>った', '<ruby>日本<rt>にほん</rt></ruby>に'],
+            explanation: '行った (pasado plano de 行く) + ことがあります = He tenido la experiencia de ir.'
+          },
+          {
+            type: 'fill',
+            prompt: 'Expresa tu opinión: **"Creo que está delicioso"**',
+            jpSentence: '<ruby>美味<rt>おい</rt></ruby>しい [ ___ ] <ruby>思<rt>おも</rt></ruby>います。',
+            options: ['と', 'を', 'に', 'で'],
+            correct: 'と',
+            audio: 'おいしいとおもいます',
+            explanation: 'La partícula と cita el pensamiento antes del verbo 思います (pensar/creer).'
+          }
+        ]
+      }
+    ];
+
+    /**************************************************************
+     * AGRUPACIÓN DE LOS 38 CAPÍTULOS EN MÓDULOS ESTILO BUNPO
+     **************************************************************/
+    const BUNPO_COURSES = [
+      {
+        id: 'hiragana',
+        track: 'hiragana',
+        badge: 'ALFABETO 1 • CAPÍTULOS 1–9',
+        title: 'Hiragana Completo (9 Capítulos)',
+        subtitle: 'Las 46 sílabas base, Dakuten (゛), Handakuten (゜), pausa っ y combinaciones きゃ・しゃ・ちゃ',
+        lessons: HIRAGANA_LESSONS
+      },
+      {
+        id: 'katakana',
+        track: 'katakana',
+        badge: 'ALFABETO 2 • CAPÍTULOS 10–15',
+        title: 'Katakana Completo (6 Capítulos)',
+        subtitle: 'Las 46 sílabas angulares, vocales largas (ー), Dakuten y sonidos modernos (ファ・ティ)',
+        lessons: KATAKANA_LESSONS
+      },
+      {
+        id: 'basics',
+        track: 'basics',
+        badge: 'BASE • CAPÍTULOS 16–18',
+        title: 'Saludos, Números y Expresiones Clave (3 Capítulos)',
+        subtitle: 'Saludos diarios, contar del 1 al 100, precios en Yenes y frases de restaurante',
+        lessons: BASICS_LESSONS
+      },
+      {
+        id: 'n5-1',
+        track: 'n5',
+        badge: 'JLPT N5 • CAPÍTULOS 19–23',
+        title: 'N5 Unidad 1: Ser/Estar, Preguntas y Demostrativos',
+        subtitle: 'Oraciones con は y です, negación, preguntas con か, これ/この y partículas の・も・と',
+        lessons: N5_LESSONS.slice(0, 5)
+      },
+      {
+        id: 'n5-2',
+        track: 'n5',
+        badge: 'JLPT N5 • CAPÍTULOS 24–28',
+        title: 'N5 Unidad 2: Verbos ~ます y Partículas de Lugar/Tiempo',
+        subtitle: 'Los 4 tiempos verbales y uso exacto de を, に, へ, で, から y まで',
+        lessons: N5_LESSONS.slice(5, 10)
+      },
+      {
+        id: 'n5-3',
+        track: 'n5',
+        badge: 'JLPT N5 • CAPÍTULOS 29–33',
+        title: 'N5 Unidad 3: Adjetivos, Existencia, Contadores y Deseos',
+        subtitle: 'Conjugación de adjetivos -i/-na, あります vs います, contadores y ~たいです',
+        lessons: N5_LESSONS.slice(10, 15)
+      },
+      {
+        id: 'n5-4',
+        track: 'n5',
+        badge: 'JLPT N5 • CAPÍTULOS 34–38',
+        title: 'N5 Unidad 4: Forma -TE, Forma Diccionario, -NAI y Opiniones',
+        subtitle: 'Peticiones (~てください / ~ないでください), permiso, habilidad y experiencias pasadas',
+        lessons: N5_LESSONS.slice(15, 20)
+      }
+    ];
+
+    /**************************************************************
+     * TABLAS DE REFERENCIA COMPLETA (HIRAGANA Y KATAKANA)
+     **************************************************************/
+    const HIRAGANA_CHART = [
+      { char: 'あ', romaji: 'a', hint: 'Vocal A' }, { char: 'い', romaji: 'i', hint: 'Vocal I' }, { char: 'う', romaji: 'u', hint: 'Vocal U' }, { char: 'え', romaji: 'e', hint: 'Vocal E' }, { char: 'お', romaji: 'o', hint: 'Vocal O' },
+      { char: 'か', romaji: 'ka', hint: 'Fila K' }, { char: 'き', romaji: 'ki', hint: 'Fila K' }, { char: 'く', romaji: 'ku', hint: 'Fila K' }, { char: 'け', romaji: 'ke', hint: 'Fila K' }, { char: 'こ', romaji: 'ko', hint: 'Fila K' },
+      { char: 'さ', romaji: 'sa', hint: 'Fila S' }, { char: 'し', romaji: 'shi', hint: 'Fila S' }, { char: 'す', romaji: 'su', hint: 'Fila S' }, { char: 'せ', romaji: 'se', hint: 'Fila S' }, { char: 'そ', romaji: 'so', hint: 'Fila S' },
+      { char: 'た', romaji: 'ta', hint: 'Fila T' }, { char: 'ち', romaji: 'chi', hint: 'Fila T' }, { char: 'つ', romaji: 'tsu', hint: 'Fila T' }, { char: 'て', romaji: 'te', hint: 'Fila T' }, { char: 'と', romaji: 'to', hint: 'Fila T' },
+      { char: 'な', romaji: 'na', hint: 'Fila N' }, { char: 'に', romaji: 'ni', hint: 'Fila N' }, { char: 'ぬ', romaji: 'nu', hint: 'Fila N' }, { char: 'ね', romaji: 'ne', hint: 'Fila N' }, { char: 'の', romaji: 'no', hint: 'Fila N' },
+      { char: 'は', romaji: 'ha', hint: 'Fila H' }, { char: 'ひ', romaji: 'hi', hint: 'Fila H' }, { char: 'ふ', romaji: 'fu', hint: 'Fila H' }, { char: 'へ', romaji: 'he', hint: 'Fila H' }, { char: 'ほ', romaji: 'ho', hint: 'Fila H' },
+      { char: 'ま', romaji: 'ma', hint: 'Fila M' }, { char: 'み', romaji: 'mi', hint: 'Fila M' }, { char: 'む', romaji: 'mu', hint: 'Fila M' }, { char: 'め', romaji: 'me', hint: 'Fila M' }, { char: 'も', romaji: 'mo', hint: 'Fila M' },
+      { char: 'や', romaji: 'ya', hint: 'Fila Y' }, { char: 'ゆ', romaji: 'yu', hint: 'Fila Y' }, { char: 'よ', romaji: 'yo', hint: 'Fila Y' },
+      { char: 'ら', romaji: 'ra', hint: 'Fila R' }, { char: 'り', romaji: 'ri', hint: 'Fila R' }, { char: 'る', romaji: 'ru', hint: 'Fila R' }, { char: 'れ', romaji: 're', hint: 'Fila R' }, { char: 'ろ', romaji: 'ro', hint: 'Fila R' },
+      { char: 'わ', romaji: 'wa', hint: 'Fila W' }, { char: 'を', romaji: 'wo', hint: 'Partícula' }, { char: 'ん', romaji: 'n', hint: 'Nasal N' }
+    ];
+
+    const KATAKANA_CHART = [
+      { char: 'ア', romaji: 'a', hint: 'Vocal A' }, { char: 'イ', romaji: 'i', hint: 'Vocal I' }, { char: 'ウ', romaji: 'u', hint: 'Vocal U' }, { char: 'エ', romaji: 'e', hint: 'Vocal E' }, { char: 'オ', romaji: 'o', hint: 'Vocal O' },
+      { char: 'カ', romaji: 'ka', hint: 'Fila K' }, { char: 'キ', romaji: 'ki', hint: 'Fila K' }, { char: 'ク', romaji: 'ku', hint: 'Fila K' }, { char: 'ケ', romaji: 'ke', hint: 'Fila K' }, { char: 'コ', romaji: 'ko', hint: 'Fila K' },
+      { char: 'サ', romaji: 'sa', hint: 'Fila S' }, { char: 'シ', romaji: 'shi', hint: 'Fila S' }, { char: 'ス', romaji: 'su', hint: 'Fila S' }, { char: 'セ', romaji: 'se', hint: 'Fila S' }, { char: 'ソ', romaji: 'so', hint: 'Fila S' },
+      { char: 'タ', romaji: 'ta', hint: 'Fila T' }, { char: 'チ', romaji: 'chi', hint: 'Fila T' }, { char: 'ツ', romaji: 'tsu', hint: 'Fila T' }, { char: 'テ', romaji: 'te', hint: 'Fila T' }, { char: 'ト', romaji: 'to', hint: 'Fila T' },
+      { char: 'ナ', romaji: 'na', hint: 'Fila N' }, { char: 'ニ', romaji: 'ni', hint: 'Fila N' }, { char: 'ヌ', romaji: 'nu', hint: 'Fila N' }, { char: 'ネ', romaji: 'ne', hint: 'Fila N' }, { char: 'ノ', romaji: 'no', hint: 'Fila N' },
+      { char: 'ハ', romaji: 'ha', hint: 'Fila H' }, { char: 'ヒ', romaji: 'hi', hint: 'Fila H' }, { char: 'フ', romaji: 'fu', hint: 'Fila H' }, { char: 'ヘ', romaji: 'he', hint: 'Fila H' }, { char: 'ホ', romaji: 'ho', hint: 'Fila H' },
+      { char: 'マ', romaji: 'ma', hint: 'Fila M' }, { char: 'ミ', romaji: 'mi', hint: 'Fila M' }, { char: 'ム', romaji: 'mu', hint: 'Fila M' }, { char: 'メ', romaji: 'me', hint: 'Fila M' }, { char: 'モ', romaji: 'mo', hint: 'Fila M' },
+      { char: 'ヤ', romaji: 'ya', hint: 'Fila Y' }, { char: 'ユ', romaji: 'yu', hint: 'Fila Y' }, { char: 'ヨ', romaji: 'yo', hint: 'Fila Y' },
+      { char: 'ラ', romaji: 'ra', hint: 'Fila R' }, { char: 'リ', romaji: 'ri', hint: 'Fila R' }, { char: 'ル', romaji: 'ru', hint: 'Fila R' }, { char: 'レ', romaji: 're', hint: 'Fila R' }, { char: 'ロ', romaji: 'ro', hint: 'Fila R' },
+      { char: 'ワ', romaji: 'wa', hint: 'Fila W' }, { char: 'ヲ', romaji: 'wo', hint: 'Partícula' }, { char: 'ン', romaji: 'n', hint: 'Nasal N' }
+    ];
+
+    /**************************************************************
+     * ESTADO PERSISTENTE Y FILTROS
+     **************************************************************/
+    const STORAGE_KEY = 'bunpo_full_38_state_v2';
     let state = {
       theme: 'dark',
       showFurigana: true,
+      selectedTrack: 'all',
       streak: 1,
-      lastStudyDate: null,
-      completedLessons: {}, // { 'hira-1': 100 }
-      srsQueue: [] // [{ lessonId, qIndex, due, interval }]
+      completedLessons: {},
+      srsQueue: []
     };
 
     function loadState() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          state = { ...state, ...JSON.parse(raw) };
-        }
+        if (raw) state = { ...state, ...JSON.parse(raw) };
       } catch (e) {}
       applyTheme();
       applyFuriganaState();
@@ -957,16 +1706,30 @@
       updateSRSBadge();
     }
 
+    function selectTrack(track) {
+      state.selectedTrack = track;
+      ['all', 'hiragana', 'katakana', 'basics', 'n5'].forEach(t => {
+        const btn = document.getElementById('track-' + t);
+        if (!btn) return;
+        if (t === track) {
+          btn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-bunpo-accent text-white shadow-xs';
+        } else {
+          btn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400';
+        }
+      });
+      renderCourseView();
+    }
+
     /**************************************************************
-     * AUDIO TTS NATIVO JAPONÉS (Compatible con iOS Safari y Android Chrome)
+     * AUDIO TTS NATIVO JAPONÉS
      **************************************************************/
     function speakJP(text) {
-      if (!('speechSynthesis' in window)) return;
-      const clean = text.replace(/<[^>]*>/g, '').trim();
+      if (!('speechSynthesis' in window) || !text) return;
+      const clean = text.replace(/<rt>.*?<\/rt>/g, '').replace(/<[^>]*>/g, '').trim();
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(clean);
       u.lang = 'ja-JP';
-      u.rate = 0.92;
+      u.rate = 0.9;
       const voices = window.speechSynthesis.getVoices();
       const jpVoice = voices.find(v => v.lang && v.lang.toLowerCase().includes('ja'));
       if (jpVoice) u.voice = jpVoice;
@@ -974,7 +1737,7 @@
     }
 
     /**************************************************************
-     * TEMA OSCURO / CLARO Y FURIGANA
+     * TEMA Y FURIGANA
      **************************************************************/
     function applyTheme() {
       const root = document.documentElement;
@@ -1029,20 +1792,23 @@
     }
 
     /**************************************************************
-     * NAVEGACIÓN ENTRE PESTAÑAS
+     * TABS INFERIORES
      **************************************************************/
     let currentTab = 'course';
 
     function switchTab(tab) {
       currentTab = tab;
+      const trackBar = document.getElementById('track-selector');
+      if (trackBar) {
+        trackBar.style.display = tab === 'course' ? 'flex' : 'none';
+      }
+
       ['course', 'review', 'kana', 'stats'].forEach(t => {
         const btn = document.getElementById('nav-' + t);
         if (!btn) return;
-        if (t === tab) {
-          btn.className = 'relative flex flex-col items-center py-1 px-3 rounded-xl text-bunpo-accent';
-        } else {
-          btn.className = 'relative flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 dark:text-slate-500';
-        }
+        btn.className = t === tab
+          ? 'relative flex flex-col items-center py-1 px-3 rounded-xl text-bunpo-accent'
+          : 'relative flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 dark:text-slate-500';
       });
 
       if (tab === 'course') renderCourseView();
@@ -1052,23 +1818,26 @@
     }
 
     /**************************************************************
-     * VISTA 1: CURSO (ESTILO BUNPO CON UNIDADES Y BARRAS DE PROGRESO)
+     * VISTA CURSO (38 CAPÍTULOS COMPLETOS)
      **************************************************************/
     function renderCourseView() {
       const container = document.getElementById('main-view');
-      const totalLessons = BUNPO_COURSES.reduce((acc, m) => acc + m.lessons.length, 0);
-      const doneLessons = Object.keys(state.completedLessons).length;
-      const pct = Math.round((doneLessons / totalLessons) * 100);
+      const allLessonsCount = BUNPO_COURSES.reduce((acc, m) => acc + m.lessons.length, 0);
+      const doneLessonsCount = Object.keys(state.completedLessons).length;
+      const pct = Math.round((doneLessonsCount / allLessonsCount) * 100);
+
+      const visibleModules = state.selectedTrack === 'all'
+        ? BUNPO_COURSES
+        : BUNPO_COURSES.filter(m => m.track === state.selectedTrack);
 
       let html = `
         <div class="p-5 max-w-lg mx-auto space-y-6">
-          <!-- Resumen general del nivel -->
           <div class="p-5 rounded-3xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-xl shadow-indigo-500/15">
             <div class="flex items-center justify-between">
               <div>
-                <span class="text-[11px] font-bold uppercase tracking-wider bg-white/20 px-2.5 py-1 rounded-full">Ruta Activa</span>
-                <h2 class="text-xl font-extrabold mt-2">Japonés desde Cero • N5</h2>
-                <p class="text-xs text-indigo-100 mt-0.5">${doneLessons} de ${totalLessons} lecciones dominadas</p>
+                <span class="text-[11px] font-bold uppercase tracking-wider bg-white/20 px-2.5 py-1 rounded-full">Currículo Completo Bunpo</span>
+                <h2 class="text-xl font-extrabold mt-2">18 Kana + 20 JLPT N5</h2>
+                <p class="text-xs text-indigo-100 mt-0.5">${doneLessonsCount} de ${allLessonsCount} capítulos completados</p>
               </div>
               <div class="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center font-extrabold text-lg">
                 ${pct}%
@@ -1080,17 +1849,17 @@
           </div>
       `;
 
-      BUNPO_COURSES.forEach(module => {
+      visibleModules.forEach(module => {
         const modDone = module.lessons.filter(l => state.completedLessons[l.id]).length;
         html += `
           <section class="space-y-3">
             <div class="flex items-center justify-between px-1">
               <div>
                 <span class="text-[11px] font-extrabold uppercase tracking-wider text-bunpo-accent">${module.badge}</span>
-                <h3 class="text-lg font-bold tracking-tight">${module.title}</h3>
+                <h3 class="text-base font-bold tracking-tight">${module.title}</h3>
                 <p class="text-xs text-slate-500 dark:text-slate-400">${module.subtitle}</p>
               </div>
-              <span class="text-xs font-bold px-2.5 py-1 rounded-xl bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+              <span class="text-xs font-bold px-2.5 py-1 rounded-xl bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
                 ${modDone}/${module.lessons.length}
               </span>
             </div>
@@ -1098,14 +1867,18 @@
             <div class="space-y-2.5">
               ${module.lessons.map((lesson, idx) => {
                 const isDone = !!state.completedLessons[lesson.id];
+                const drawBadge = lesson.isKanaLesson ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-500/15 text-teal-400">✍️ ${lesson.drawChars.length} letras</span>` : '';
                 return `
                   <div onclick="startLesson('${module.id}', '${lesson.id}')" class="p-4 rounded-2xl bg-bunpo-lightCard dark:bg-bunpo-darkCard border border-bunpo-lightBorder dark:border-bunpo-darkBorder flex items-center justify-between gap-3 cursor-pointer active:scale-[0.99] transition shadow-xs">
                     <div class="flex items-center gap-3.5">
-                      <div class="w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 ${isDone ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-indigo-500/10 text-bunpo-accent border border-indigo-500/20'}">
+                      <div class="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 ${isDone ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-indigo-500/10 text-bunpo-accent border border-indigo-500/20'}">
                         ${isDone ? '✓' : (idx + 1)}
                       </div>
                       <div>
-                        <h4 class="font-bold text-sm jp-font">${lesson.title}</h4>
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <h4 class="font-bold text-sm jp-font">${lesson.title}</h4>
+                          ${drawBadge}
+                        </div>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">${lesson.desc}</p>
                       </div>
                     </div>
@@ -1123,12 +1896,11 @@
     }
 
     /**************************************************************
-     * VISTA 2: COLA DE REPASO ESPACIADO (SRS)
+     * VISTA REPASO SRS
      **************************************************************/
     function renderReviewView() {
       const container = document.getElementById('main-view');
       const count = state.srsQueue.length;
-
       container.innerHTML = `
         <div class="p-5 max-w-lg mx-auto space-y-5">
           <div class="p-6 rounded-3xl bg-bunpo-lightCard dark:bg-bunpo-darkCard border border-bunpo-lightBorder dark:border-bunpo-darkBorder text-center space-y-4">
@@ -1138,18 +1910,16 @@
             <div>
               <h2 class="text-xl font-extrabold">Repaso Inteligente SRS</h2>
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">
-                Bunpo guarda automáticamente los puntos gramaticales que estudias o fallas para reforzarlos en el momento ideal.
+                Las preguntas y letras que estudias o fallas se acumulan aquí para que las repases hasta dominarlas.
               </p>
             </div>
-
             <div class="py-3 px-4 rounded-2xl bg-slate-100 dark:bg-slate-800/70 inline-flex items-center gap-2 text-sm font-bold">
-              <span>Tarjetas listas hoy:</span>
+              <span>Pendientes hoy:</span>
               <span class="text-bunpo-accent text-base">${count}</span>
             </div>
-
             <div>
               <button onclick="startSRSSession()" ${count === 0 ? 'disabled' : ''} class="w-full py-3.5 rounded-2xl font-bold text-white transition ${count > 0 ? 'bg-bunpo-accent hover:bg-bunpo-accentSoft shadow-lg shadow-indigo-500/20' : 'bg-slate-300 dark:bg-slate-800 text-slate-500 cursor-not-allowed'}">
-                ${count > 0 ? 'Comenzar sesión de repaso (' + count + ')' : '¡Todo al día! Completa una lección para añadir tarjetas'}
+                ${count > 0 ? 'Comenzar repaso (' + count + ')' : '¡Al día! Completa cualquier capítulo para alimentar tu cola SRS'}
               </button>
             </div>
           </div>
@@ -1158,27 +1928,24 @@
     }
 
     /**************************************************************
-     * VISTA 3: TABLA KANA INTERACTIVA + PRÁCTICA DE TRAZO LIBRE
+     * VISTA TABLA KANA INTERACTIVA
      **************************************************************/
     function renderKanaView(mode = 'hiragana') {
       const container = document.getElementById('main-view');
       const list = mode === 'hiragana' ? HIRAGANA_CHART : KATAKANA_CHART;
-
       container.innerHTML = `
         <div class="p-5 max-w-lg mx-auto space-y-5">
           <div class="flex p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-800">
             <button onclick="renderKanaView('hiragana')" class="flex-1 py-2 rounded-xl text-xs font-bold transition ${mode === 'hiragana' ? 'bg-bunpo-lightCard dark:bg-bunpo-darkCard text-bunpo-accent shadow-xs' : 'text-slate-500'}">
-              Hiragana (あ)
+              Hiragana (46)
             </button>
             <button onclick="renderKanaView('katakana')" class="flex-1 py-2 rounded-xl text-xs font-bold transition ${mode === 'katakana' ? 'bg-bunpo-lightCard dark:bg-bunpo-darkCard text-bunpo-accent shadow-xs' : 'text-slate-500'}">
-              Katakana (ア)
+              Katakana (46)
             </button>
           </div>
-
           <p class="text-xs text-slate-500 dark:text-slate-400 text-center">
-            Toca cualquier carácter para escuchar su pronunciación nativa y abrir la pizarra de trazo.
+            Toca cualquier letra para escuchar su pronunciación y practicar su trazo libremente.
           </p>
-
           <div class="grid grid-cols-5 gap-2.5">
             ${list.map(item => `
               <button onclick="openKanaPracticeModal('${item.char}', '${item.romaji}', '${item.hint}')" class="p-3 rounded-2xl bg-bunpo-lightCard dark:bg-bunpo-darkCard border border-bunpo-lightBorder dark:border-bunpo-darkBorder flex flex-col items-center justify-center active:scale-95 transition">
@@ -1206,14 +1973,12 @@
               <button onclick="closeWordPopover()" class="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold">✕</button>
             </div>
           </div>
-
           <div class="relative w-full h-56 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-bunpo-lightBorder dark:border-bunpo-darkBorder flex items-center justify-center overflow-hidden">
             <span class="jp-font text-[130px] font-bold text-slate-300/40 dark:text-slate-700/40 pointer-events-none select-none">${char}</span>
             <canvas id="free-kana-canvas" width="280" height="224" class="draw-pad absolute inset-0 w-full h-full"></canvas>
           </div>
-
           <div class="flex justify-between items-center">
-            <span class="text-xs text-slate-400">Dibuja el trazo con tu dedo sobre la guía</span>
+            <span class="text-xs text-slate-400">Dibuja el trazo con tu dedo</span>
             <button onclick="clearCanvas('free-kana-canvas')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-800">Borrar trazo</button>
           </div>
         </div>
@@ -1223,55 +1988,57 @@
       setTimeout(() => initDrawCanvas('free-kana-canvas'), 50);
     }
 
+    function closeWordPopover() {
+      const pop = document.getElementById('word-popover');
+      pop.classList.add('hidden');
+      pop.classList.remove('flex');
+    }
+
     /**************************************************************
-     * VISTA 4: PROGRESO Y PREFERENCIAS
+     * VISTA PROGRESO Y PREFERENCIAS
      **************************************************************/
     function renderStatsView() {
       const container = document.getElementById('main-view');
       const doneCount = Object.keys(state.completedLessons).length;
-
       container.innerHTML = `
         <div class="p-5 max-w-lg mx-auto space-y-5">
           <div class="grid grid-cols-2 gap-3">
             <div class="p-4 rounded-2xl bg-bunpo-lightCard dark:bg-bunpo-darkCard border border-bunpo-lightBorder dark:border-bunpo-darkBorder">
-              <span class="text-xs text-slate-400 font-medium">Racha de estudio</span>
+              <span class="text-xs text-slate-400 font-medium">Racha activa</span>
               <p class="text-2xl font-extrabold mt-1">🔥 ${state.streak} día(s)</p>
             </div>
             <div class="p-4 rounded-2xl bg-bunpo-lightCard dark:bg-bunpo-darkCard border border-bunpo-lightBorder dark:border-bunpo-darkBorder">
-              <span class="text-xs text-slate-400 font-medium">Lecciones listas</span>
-              <p class="text-2xl font-extrabold mt-1 text-bunpo-accent">✓ ${doneCount}</p>
+              <span class="text-xs text-slate-400 font-medium">Capítulos listos</span>
+              <p class="text-2xl font-extrabold mt-1 text-bunpo-accent">✓ ${doneCount} / 38</p>
             </div>
           </div>
 
           <div class="p-5 rounded-2xl bg-bunpo-lightCard dark:bg-bunpo-darkCard border border-bunpo-lightBorder dark:border-bunpo-darkBorder space-y-4">
-            <h3 class="font-bold text-sm">Preferencias de Estudio</h3>
-
+            <h3 class="font-bold text-sm">Ajustes de Bunpo</h3>
             <div class="flex items-center justify-between py-2 border-b border-bunpo-lightBorder dark:border-bunpo-darkBorder">
               <div>
-                <p class="text-sm font-semibold">Tema de la interfaz</p>
-                <p class="text-xs text-slate-400">Alternar entre Modo Oscuro y Modo Claro</p>
+                <p class="text-sm font-semibold">Apariencia</p>
+                <p class="text-xs text-slate-400">Modo Oscuro o Modo Claro</p>
               </div>
               <button onclick="toggleTheme(); renderStatsView();" class="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold">
                 ${state.theme === 'dark' ? '🌙 Oscuro' : '☀️ Claro'}
               </button>
             </div>
-
             <div class="flex items-center justify-between py-2 border-b border-bunpo-lightBorder dark:border-bunpo-darkBorder">
               <div>
-                <p class="text-sm font-semibold">Mostrar Furigana sobre Kanji</p>
-                <p class="text-xs text-slate-400">Lectura en hiragana encima de cada kanji</p>
+                <p class="text-sm font-semibold">Furigana sobre Kanji</p>
+                <p class="text-xs text-slate-400">Muestra la lectura en hiragana encima del kanji</p>
               </div>
               <button onclick="toggleFurigana(); renderStatsView();" class="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-bunpo-accent">
                 ${state.showFurigana ? 'Activado' : 'Oculto'}
               </button>
             </div>
-
             <div class="flex items-center justify-between pt-2">
               <div>
-                <p class="text-sm font-semibold text-rose-500">Reiniciar progreso</p>
-                <p class="text-xs text-slate-400">Borra las lecciones completadas y la cola SRS</p>
+                <p class="text-sm font-semibold text-rose-500">Borrar progreso</p>
+                <p class="text-xs text-slate-400">Reinicia los 38 capítulos a cero</p>
               </div>
-              <button onclick="resetAllProgress()" class="px-3.5 py-2 rounded-xl bg-rose-500/10 text-rose-500 text-xs font-bold">
+              <button onclick="if(confirm('¿Reiniciar todo el progreso?')){state.completedLessons={};state.srsQueue=[];saveState();renderStatsView();}" class="px-3.5 py-2 rounded-xl bg-rose-500/10 text-rose-500 text-xs font-bold">
                 Reiniciar
               </button>
             </div>
@@ -1280,17 +2047,8 @@
       `;
     }
 
-    function resetAllProgress() {
-      if (confirm('¿Seguro que deseas reiniciar tu progreso de Bunpo?')) {
-        state.completedLessons = {};
-        state.srsQueue = [];
-        saveState();
-        renderStatsView();
-      }
-    }
-
     /**************************************************************
-     * MOTOR DE LECCIÓN BUNPO (TEORÍA -> DIBUJO KANA -> BLOQUES / FILL / INPUT)
+     * MOTOR DE LECCIÓN (EXPLICACIÓN -> TRAZO -> BLOQUES / FILL / INPUT)
      **************************************************************/
     let activeLesson = null;
     let lessonSteps = [];
@@ -1307,45 +2065,34 @@
       activeLesson = lesson;
       lessonSteps = [];
 
-      // 1. Tarjetas de explicación estilo Bunpo
-      lesson.theory.forEach(t => {
-        lessonSteps.push({ stepType: 'theory', data: t });
-      });
+      lesson.theory.forEach(t => lessonSteps.push({ stepType: 'theory', data: t }));
 
-      // 2. Si es lección de alfabeto, pizarra de dibujo de cada letra antes de los bloques
       if (lesson.isKanaLesson && lesson.drawChars) {
-        lesson.drawChars.forEach(d => {
-          lessonSteps.push({ stepType: 'draw', data: d });
-        });
+        lesson.drawChars.forEach(d => lessonSteps.push({ stepType: 'draw', data: d }));
       }
 
-      // 3. Preguntas interactivas (bloques, huecos, escritura)
-      lesson.questions.forEach((q, qIdx) => {
-        lessonSteps.push({ stepType: 'quiz', data: q, lessonId: lesson.id, qIdx });
-      });
+      lesson.questions.forEach(q => lessonSteps.push({ stepType: 'quiz', data: q }));
 
       currentStepIndex = 0;
-      openLessonModal();
+      const modal = document.getElementById('lesson-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
       renderCurrentLessonStep();
     }
 
     function startSRSSession() {
       if (state.srsQueue.length === 0) return;
       activeLesson = { id: 'srs-session', title: 'Repaso SRS' };
-      lessonSteps = state.srsQueue.slice(0, 8).map(item => ({
+      lessonSteps = state.srsQueue.slice(0, 10).map(item => ({
         stepType: 'quiz',
         data: item.question,
         isSRS: true
       }));
       currentStepIndex = 0;
-      openLessonModal();
-      renderCurrentLessonStep();
-    }
-
-    function openLessonModal() {
       const modal = document.getElementById('lesson-modal');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+      renderCurrentLessonStep();
     }
 
     function closeLessonModal() {
@@ -1364,39 +2111,31 @@
 
       const pct = Math.round(((currentStepIndex + 1) / lessonSteps.length) * 100);
       document.getElementById('lesson-progress-bar').style.width = pct + '%';
+      document.getElementById('lesson-step-counter').textContent = `${currentStepIndex + 1}/${lessonSteps.length}`;
 
       const step = lessonSteps[currentStepIndex];
 
-      // PASO A: TARJETA DE TEORÍA ESTILO BUNPO
       if (step.stepType === 'theory') {
         const t = step.data;
-        actionBtn.textContent = 'Entendido • Continuar';
-        actionBtn.className = 'w-full py-3.5 rounded-2xl bg-bunpo-accent text-white font-bold text-base shadow-lg shadow-indigo-500/20';
-
+        actionBtn.textContent = 'Continuar';
         body.innerHTML = `
           <div class="space-y-5 my-auto">
             <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/15 text-indigo-400 text-xs font-bold">
-              <span>📘 Explicación Gramatical</span>
+              <span>📘 Explicación Bunpo</span>
             </div>
-
             <h2 class="text-2xl font-extrabold tracking-tight jp-font">${t.heading}</h2>
-
-            <p class="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+            <p class="text-sm leading-relaxed text-slate-600 dark:text-slate-300 whitespace-pre-line">
               ${t.body.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-900 dark:text-white font-bold">$1</strong>')}
             </p>
-
             <div class="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 text-center font-bold text-sm jp-font">
               ${t.formula}
             </div>
-
             <div class="space-y-2.5 pt-2">
-              <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Ejemplos (Toca una palabra para analizarla o 🔊)</p>
+              <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Vocabulario y Ejemplos (Toca 🔊 para escuchar)</p>
               ${t.examples.map(ex => `
-                <div class="p-4 rounded-2xl bg-bunpo-lightCard dark:bg-bunpo-darkCard border border-bunpo-lightBorder dark:border-bunpo-darkBorder flex items-center justify-between gap-3">
-                  <div class="space-y-1">
-                    <div class="jp-font text-lg font-bold leading-relaxed">
-                      ${renderInteractiveSentence(ex.jp, ex.tokens)}
-                    </div>
+                <div class="p-3.5 rounded-2xl bg-bunpo-lightCard dark:bg-bunpo-darkCard border border-bunpo-lightBorder dark:border-bunpo-darkBorder flex items-center justify-between gap-3">
+                  <div>
+                    <div class="jp-font text-lg font-bold">${ex.jp} <span class="text-xs font-normal text-indigo-400 ml-1">(${ex.romaji})</span></div>
                     <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">${ex.es}</p>
                   </div>
                   <button onclick="speakJP('${ex.audio}')" class="w-10 h-10 rounded-xl bg-indigo-500/15 text-bunpo-accent flex items-center justify-center shrink-0 active:scale-95">
@@ -1410,35 +2149,28 @@
         return;
       }
 
-      // PASO B: DIBUJO DE LA LETRA (SOLO EN ALFABETO)
       if (step.stepType === 'draw') {
         const d = step.data;
         currentStrokeScore = 0;
         speakJP(d.char);
         actionBtn.textContent = 'Validar Trazo y Continuar';
-        actionBtn.className = 'w-full py-3.5 rounded-2xl bg-bunpo-accent text-white font-bold text-base shadow-lg shadow-indigo-500/20';
-
         body.innerHTML = `
           <div class="space-y-4 my-auto text-center">
             <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/15 text-teal-400 text-xs font-bold">
-              <span>✍️ Práctica de Escritura Kana</span>
+              <span>✍️ Dibuja el Carácter</span>
             </div>
-
             <div class="flex items-center justify-center gap-3">
-              <h2 class="text-2xl font-extrabold">Dibuja: <span class="jp-font text-bunpo-accent">${d.char}</span> (${d.romaji.toUpperCase()})</h2>
+              <h2 class="text-2xl font-extrabold">Traza: <span class="jp-font text-bunpo-accent text-3xl">${d.char}</span> (${d.romaji.toUpperCase()})</h2>
               <button onclick="speakJP('${d.char}')" class="w-9 h-9 rounded-xl bg-indigo-500/15 text-bunpo-accent flex items-center justify-center">🔊</button>
             </div>
-
             <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">${d.strokes}</p>
-
             <div class="relative w-64 h-64 mx-auto rounded-3xl bg-bunpo-lightCard dark:bg-bunpo-darkCard border-2 border-dashed border-indigo-500/40 flex items-center justify-center overflow-hidden shadow-inner">
-              <span class="jp-font text-[150px] font-bold text-slate-300/35 dark:text-slate-700/40 pointer-events-none select-none">${d.char}</span>
+              <span class="jp-font text-[145px] font-bold text-slate-300/35 dark:text-slate-700/40 pointer-events-none select-none">${d.char}</span>
               <canvas id="lesson-draw-canvas" width="256" height="256" class="draw-pad absolute inset-0 w-full h-full"></canvas>
             </div>
-
             <div>
               <button onclick="clearCanvas('lesson-draw-canvas')" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                Limpiar lienzo
+                Borrar trazo
               </button>
             </div>
           </div>
@@ -1447,12 +2179,9 @@
         return;
       }
 
-      // PASO C: EJERCICIOS INTERACTIVOS (BLOQUES / FILL / INPUT)
       if (step.stepType === 'quiz') {
         const q = step.data;
         actionBtn.textContent = 'Comprobar';
-        actionBtn.className = 'w-full py-3.5 rounded-2xl bg-bunpo-accent text-white font-bold text-base shadow-lg shadow-indigo-500/20';
-
         if (q.type === 'blocks') {
           selectedBlocks = [];
           availableBlocks = [...q.pool];
@@ -1466,43 +2195,6 @@
       }
     }
 
-    function renderInteractiveSentence(jpHtml, tokens) {
-      if (!tokens || tokens.length === 0) return jpHtml;
-      return tokens.map(t => {
-        const isParticle = ['は', 'を', 'に', 'で', 'の', 'か'].includes(t);
-        return `<span onclick="openWordPopover('${t}')" class="word-token ${isParticle ? 'pt-tag' : ''}">${formatWithFurigana(t)}</span>`;
-      }).join(' ');
-    }
-
-    function formatWithFurigana(token) {
-      const map = {
-        '私': '<ruby>私<rt>わたし</rt></ruby>',
-        '学生': '<ruby>学生<rt>がくせい</rt></ruby>',
-        '先生': '<ruby>先生<rt>せんせい</rt></ruby>',
-        '日本人': '<ruby>日本人<rt>にほんじん</rt></ruby>',
-        '本': '<ruby>本<rt>ほん</rt></ruby>',
-        '水': '<ruby>水<rt>みず</rt></ruby>',
-        '寿司': '<ruby>寿司<rt>すし</rt></ruby>',
-        '食べます': '<ruby>食<rt>た</rt></ruby>べます',
-        '飲みます': '<ruby>飲<rt>の</rt></ruby>みます',
-        '行きます': '<ruby>行<rt>い</rt></ruby>きます',
-        '行きました': '<ruby>行<rt>い</rt></ruby>きました',
-        '日本': '<ruby>日本<rt>にほん</rt></ruby>',
-        '東京': '<ruby>東京<rt>とうきょう</rt></ruby>',
-        '京都': '<ruby>京都<rt>きょうと</rt></ruby>',
-        '電車': '<ruby>電車<rt>でんしゃ</rt></ruby>',
-        '美味しい': '<ruby>美味<rt>おい</rt></ruby>しい',
-        '高い': '<ruby>高<rt>たか</rt></ruby>い',
-        '高くないです': '<ruby>高<rt>たか</rt></ruby>くないです',
-        '静か': '<ruby>静<rt>しず</rt></ruby>か',
-        '買いたい': '<ruby>買<rt>か</rt></ruby>いたい',
-        '行きたい': '<ruby>行<rt>い</rt></ruby>きたい',
-        '見て': '<ruby>見<rt>み</rt></ruby>て'
-      };
-      return map[token] || token;
-    }
-
-    // 1. RENDERIZAR PREGUNTA DE ARMAR BLOQUES
     function renderBlocksQuestion(q) {
       const body = document.getElementById('lesson-body');
       body.innerHTML = `
@@ -1513,13 +2205,10 @@
               🔊 Escuchar
             </button>
           </div>
-
           <h3 class="text-lg font-bold">${q.prompt.replace(/\*\*(.*?)\*\*/g, '<span class="text-bunpo-accent">$1</span>')}</h3>
-
-          <!-- Zona de respuesta -->
           <div class="min-h-[82px] p-4 rounded-2xl bg-bunpo-lightCard dark:bg-bunpo-darkCard border-2 border-bunpo-lightBorder dark:border-bunpo-darkBorder flex flex-wrap items-center gap-2">
             ${selectedBlocks.length === 0
-              ? `<span class="text-xs text-slate-400">Toca los bloques de abajo en orden...</span>`
+              ? `<span class="text-xs text-slate-400">Toca los bloques en el orden correcto...</span>`
               : selectedBlocks.map((b, idx) => `
                   <button onclick="unselectBlock(${idx})" class="px-4 py-2.5 rounded-xl bg-bunpo-accent text-white font-bold jp-font text-base shadow-xs">
                     ${b}
@@ -1527,8 +2216,6 @@
                 `).join('')
             }
           </div>
-
-          <!-- Banco de bloques -->
           <div class="flex flex-wrap gap-2.5 justify-center pt-2">
             ${availableBlocks.map((b, idx) => `
               <button onclick="selectBlock(${idx})" class="px-4 py-2.5 rounded-xl bg-bunpo-lightCard dark:bg-bunpo-darkCard border border-bunpo-lightBorder dark:border-bunpo-darkBorder font-bold jp-font text-base shadow-xs active:scale-95 transition">
@@ -1555,22 +2242,18 @@
       renderBlocksQuestion(lessonSteps[currentStepIndex].data);
     }
 
-    // 2. RENDERIZAR PREGUNTA DE RELLENAR HUECO (FILL-IN-THE-BLANK)
     function renderFillQuestion(q) {
       const body = document.getElementById('lesson-body');
       body.innerHTML = `
         <div class="space-y-6 my-auto">
           <div class="flex items-center justify-between">
-            <span class="px-3 py-1 rounded-full bg-amber-500/15 text-amber-400 text-xs font-bold">Completar Oración</span>
+            <span class="px-3 py-1 rounded-full bg-amber-500/15 text-amber-400 text-xs font-bold">Completar Hueco</span>
             <button onclick="speakJP('${q.audio}')" class="px-3 py-1.5 rounded-xl bg-indigo-500/15 text-bunpo-accent text-xs font-bold">🔊 Audio</button>
           </div>
-
           <h3 class="text-lg font-bold">${q.prompt.replace(/\*\*(.*?)\*\*/g, '<span class="text-bunpo-accent">$1</span>')}</h3>
-
           <div class="p-6 rounded-2xl bg-bunpo-lightCard dark:bg-bunpo-darkCard border border-bunpo-lightBorder dark:border-bunpo-darkBorder text-center jp-font text-2xl font-bold">
             ${q.jpSentence.replace('[ ___ ]', `<span class="px-3 py-1 mx-1 rounded-xl border-2 border-bunpo-accent text-bunpo-accent">${selectedFillOption || '＿＿'}</span>`)}
           </div>
-
           <div class="grid grid-cols-2 gap-3">
             ${q.options.map(opt => `
               <button onclick="chooseFillOption('${opt}')" class="p-4 rounded-2xl border font-bold jp-font text-lg transition ${selectedFillOption === opt ? 'bg-bunpo-accent text-white border-bunpo-accent' : 'bg-bunpo-lightCard dark:bg-bunpo-darkCard border-bunpo-lightBorder dark:border-bunpo-darkBorder'}">
@@ -1589,47 +2272,40 @@
       renderFillQuestion(lessonSteps[currentStepIndex].data);
     }
 
-    // 3. RENDERIZAR PREGUNTA DE ESCRIBIR RESPUESTA (INPUT)
     function renderInputQuestion(q) {
       const body = document.getElementById('lesson-body');
       body.innerHTML = `
         <div class="space-y-6 my-auto">
           <div class="flex items-center justify-between">
             <span class="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-bold">Escribir Respuesta</span>
-            <button onclick="speakJP('${q.audio}')" class="px-3 py-1.5 rounded-xl bg-indigo-500/15 text-bunpo-accent text-xs font-bold">🔊 Pista de voz</button>
+            <button onclick="speakJP('${q.audio}')" class="px-3 py-1.5 rounded-xl bg-indigo-500/15 text-bunpo-accent text-xs font-bold">🔊 Escuchar</button>
           </div>
-
           <h3 class="text-lg font-bold">${q.prompt.replace(/\*\*(.*?)\*\*/g, '<span class="text-bunpo-accent">$1</span>')}</h3>
-
           <div class="p-5 rounded-2xl bg-bunpo-lightCard dark:bg-bunpo-darkCard border border-bunpo-lightBorder dark:border-bunpo-darkBorder text-center jp-font text-2xl font-bold">
             ${q.jpDisplay}
           </div>
-
-          <input id="quiz-text-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Escribe en japonés o romaji..." class="w-full p-4 rounded-2xl bg-bunpo-lightCard dark:bg-bunpo-darkCard border-2 border-bunpo-lightBorder dark:border-bunpo-darkBorder focus:border-bunpo-accent outline-none text-base font-bold text-center" />
+          <input id="quiz-text-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Escribe en romaji o japonés..." class="w-full p-4 rounded-2xl bg-bunpo-lightCard dark:bg-bunpo-darkCard border-2 border-bunpo-lightBorder dark:border-bunpo-darkBorder focus:border-bunpo-accent outline-none text-base font-bold text-center" />
         </div>
       `;
     }
 
-    // VALIDACIÓN Y AVANCE DE PASO
     function handleLessonAction() {
       const step = lessonSteps[currentStepIndex];
 
-      // Si es teoría, avanza directo
       if (step.stepType === 'theory') {
         advanceStep();
         return;
       }
 
-      // Si es dibujo de Kana, verifica que haya dibujado sobre el lienzo
       if (step.stepType === 'draw') {
         if (!stepAnswered) {
-          if (currentStrokeScore < 12) {
-            showFeedback(false, 'Traza el carácter sobre la pizarra con tu dedo antes de continuar.');
+          if (currentStrokeScore < 8) {
+            showFeedback(false, 'Dibuja el trazo sobre la guía con tu dedo antes de continuar.');
             return;
           }
           stepAnswered = true;
           speakJP(step.data.char);
-          showFeedback(true, `¡Excelente trazo de ${step.data.char} (${step.data.romaji})!`);
+          showFeedback(true, `✓ ¡Trazo de ${step.data.char} (${step.data.romaji}) registrado!`);
           document.getElementById('lesson-action-btn').textContent = 'Continuar';
           return;
         } else {
@@ -1638,13 +2314,11 @@
         }
       }
 
-      // Si es pregunta de quiz
       if (step.stepType === 'quiz') {
         if (stepAnswered) {
           advanceStep();
           return;
         }
-
         const q = step.data;
         let isCorrect = false;
 
@@ -1660,34 +2334,30 @@
         }
 
         stepAnswered = true;
-
         if (isCorrect) {
           speakJP(q.audio || q.audioHint || '');
-          showFeedback(true, `✓ ¡Correcto! ${q.explanation}`);
+          showFeedback(true, `✓ ¡Correcto! ${q.explanation.replace(/\*\*(.*?)\*\*/g, '$1')}`);
           if (step.isSRS) {
             state.srsQueue.shift();
             saveState();
           }
         } else {
-          showFeedback(false, `✕ Respuesta correcta: ${q.explanation}`);
-          // Agregar a la cola SRS para repasar después
+          showFeedback(false, `✕ ${q.explanation.replace(/\*\*(.*?)\*\*/g, '$1')}`);
           state.srsQueue.push({ question: q, addedAt: Date.now() });
           saveState();
         }
 
-        const btn = document.getElementById('lesson-action-btn');
-        btn.textContent = currentStepIndex === lessonSteps.length - 1 ? 'Finalizar Lección 🎉' : 'Siguiente';
+        document.getElementById('lesson-action-btn').textContent =
+          currentStepIndex === lessonSteps.length - 1 ? 'Completar Capítulo 🎉' : 'Siguiente';
       }
     }
 
     function showFeedback(ok, msg) {
       const banner = document.getElementById('feedback-banner');
       banner.classList.remove('hidden');
-      if (ok) {
-        banner.className = 'mb-3 p-3.5 rounded-2xl text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
-      } else {
-        banner.className = 'mb-3 p-3.5 rounded-2xl text-xs font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30';
-      }
+      banner.className = ok
+        ? 'mb-3 p-3.5 rounded-2xl text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+        : 'mb-3 p-3.5 rounded-2xl text-xs font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30';
       banner.innerHTML = msg;
     }
 
@@ -1696,11 +2366,9 @@
         currentStepIndex++;
         renderCurrentLessonStep();
       } else {
-        // Lección terminada
         if (activeLesson && activeLesson.id !== 'srs-session') {
           state.completedLessons[activeLesson.id] = 100;
-          // Añadir una pregunta clave de esta lección al repaso SRS si la cola está vacía
-          if (activeLesson.questions && activeLesson.questions.length > 0 && state.srsQueue.length < 3) {
+          if (activeLesson.questions && activeLesson.questions.length > 0 && state.srsQueue.length < 5) {
             state.srsQueue.push({ question: activeLesson.questions[0], addedAt: Date.now() });
           }
           saveState();
@@ -1710,7 +2378,7 @@
     }
 
     /**************************************************************
-     * LIENZO HTML5 DE DIBUJO TÁCTIL (CON SOPORTE PARA IPHONE / ANDROID)
+     * LIENZO HTML5 TÁCTIL
      **************************************************************/
     function initDrawCanvas(canvasId) {
       const canvas = document.getElementById(canvasId);
@@ -1750,14 +2418,11 @@
         currentStrokeScore++;
       };
 
-      const end = () => {
-        drawing = false;
-      };
+      const end = () => { drawing = false; };
 
       canvas.addEventListener('mousedown', start);
       canvas.addEventListener('mousemove', move);
       window.addEventListener('mouseup', end);
-
       canvas.addEventListener('touchstart', start, { passive: false });
       canvas.addEventListener('touchmove', move, { passive: false });
       canvas.addEventListener('touchend', end);
@@ -1771,48 +2436,6 @@
       currentStrokeScore = 0;
     }
 
-    /**************************************************************
-     * POPOVER DE INSPECCIÓN DE PALABRAS
-     **************************************************************/
-    let currentPopoverWord = '';
-
-    function openWordPopover(token) {
-      const info = WORD_DICT[token];
-      if (!info) {
-        speakJP(token);
-        return;
-      }
-      currentPopoverWord = info.jp;
-      speakJP(info.jp);
-      const pop = document.getElementById('word-popover');
-      pop.innerHTML = `
-        <div onclick="event.stopPropagation()" class="w-full max-w-md bg-bunpo-lightCard dark:bg-bunpo-darkCard border border-bunpo-lightBorder dark:border-bunpo-darkBorder rounded-3xl p-5 shadow-2xl mb-4">
-          <div class="flex items-start justify-between">
-            <div>
-              <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-500/15 text-indigo-400">${info.pos}</span>
-              <h3 class="jp-font text-3xl font-bold mt-2">${info.jp}</h3>
-              <p class="text-sm text-indigo-400 font-medium mt-0.5">${info.reading}</p>
-            </div>
-            <button onclick="speakJP('${info.jp}')" class="w-12 h-12 rounded-2xl bg-bunpo-accent text-white flex items-center justify-center shadow-md active:scale-95">
-              🔊
-            </button>
-          </div>
-          <p class="mt-3 text-base font-semibold text-slate-700 dark:text-slate-200 border-t border-bunpo-lightBorder dark:border-bunpo-darkBorder pt-3">
-            ${info.meaning}
-          </p>
-        </div>
-      `;
-      pop.classList.remove('hidden');
-      pop.classList.add('flex');
-    }
-
-    function closeWordPopover() {
-      const pop = document.getElementById('word-popover');
-      pop.classList.add('hidden');
-      pop.classList.remove('flex');
-    }
-
-    // Inicializar aplicación
     window.addEventListener('DOMContentLoaded', () => {
       loadState();
       renderCourseView();
